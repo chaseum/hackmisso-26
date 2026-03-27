@@ -101,3 +101,82 @@ export async function addNoteAction(projectId: string | null, formData: FormData
 
   revalidatePath("/dashboard");
 }
+
+//cyber assessment logic
+
+export interface FrontendResponse {
+  questionId: string;
+  userAnsweredYes: boolean;
+  riskWeight: number;
+  effortLevel: number;
+  questionText: string;
+}
+
+export interface ProcessedVulnerability {
+  questionId: string;
+  issue: string;
+  priorityScore: number;
+  category: string; //"Quick Win", "Medium Priority", "Major Project"
+}
+
+export async function processAssessment(responses: FrontendResponse[]){
+  //get authenticated user and supabase client
+  const{ supabase, userId } = await getCurrentUserId();
+
+  const vulnerabilities: ProcessedVulnerability[] = [];
+  let totalScore = 0;
+  let maxPossibleScore = 0;
+
+  for(const response of responses){
+
+    maxPossibleScore += response.riskWeight;
+
+    if(response.userAnsweredYes){
+      //secure point
+      totalScore += response.riskWeight;
+    }
+    else{
+      //vulnerability, calculate priority
+      const priorityScore = response.riskWeight / response.effortLevel;
+
+      let category = "Medium Priority";
+      if(priorityScore >= 3.0) category = "Quick Win";
+      if(priorityScore <= 1.0 && response.effortLevel === 3) category = "Major Project";
+
+      vulnerabilities.push({
+        questionId: response.questionId,
+        issue: response.questionText,
+        priorityScore: Number(priorityScore.toFixed(2)),
+        category: category
+      });
+    }
+
+    //sort vulnerabilities from highest to lowest priority
+    vulnerabilities.sort((a, b) => b.priorityScore - a.priorityScore);
+    const overallRiskRating = (totalScore / maxPossibleScore) * 100;
+
+    //quick win count
+    const highPriorityCount = vulnerabilities.filter(v => v.priorityScore >= 3.0).length;
+
+    //supabase insert logic
+    const{ data, error } = await supabase.from('assessments').insert({
+      user_id: userId,
+      total_score: totalScore,
+      high_priority_flags: highPriorityCount,
+      raw_responses: responses //storing original json is case we need it later
+    }).select().single();
+
+    if(error){
+      throw new Error("Failed to save assessment: " + error.message);
+    }
+
+    revalidatePath("/dashboard");
+
+    return{
+      success : true,
+      assessmentId: data.id,
+      securityHealthScore: Math.round(overallRiskRating),
+      prioritizedVulnerabilities: vulnerabilities
+    };
+  }
+}
