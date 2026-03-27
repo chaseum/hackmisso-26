@@ -72,8 +72,12 @@ npm run dev
 1. Create a new Supabase project.
 2. In Supabase, enable Email auth under `Authentication -> Providers`.
 3. Copy the project URL and anon key into `.env.local`.
-4. Open the SQL editor and run the migration in [supabase/migrations/202603271300_initial_schema.sql](/Users/chase/code/cosc-3380/group-project/webapp/hackmisso-26/supabase/migrations/202603271300_initial_schema.sql).
-5. Optional: update the UUID in [supabase/seed.sql](/Users/chase/code/cosc-3380/group-project/webapp/hackmisso-26/supabase/seed.sql) and run it for demo data.
+4. Open the SQL editor and run the migrations in order:
+   - [supabase/migrations/202603271300_initial_schema.sql](/Users/chase/code/hackmisso-26/supabase/migrations/202603271300_initial_schema.sql)
+   - [supabase/migrations/202603271830_assessment_schema.sql](/Users/chase/code/hackmisso-26/supabase/migrations/202603271830_assessment_schema.sql)
+5. Optional:
+   - update the UUID in [supabase/seed.sql](/Users/chase/code/hackmisso-26/supabase/seed.sql) and run it for demo project data
+   - run [supabase/questions.sql](/Users/chase/code/hackmisso-26/supabase/questions.sql) to create or refresh the assessment question set manually
 
 ## Auth Architecture
 
@@ -89,12 +93,21 @@ Tables:
 - `profiles`
 - `projects`
 - `notes`
+- `questions`
+- `assessments`
 
 Security:
 
 - Profiles are only visible and editable by the owning user.
 - Projects are only accessible to their owner.
 - Notes are scoped to the author and the owner of the related project.
+- Questions are readable by authenticated users.
+- Assessments are readable and insertable only by the owning authenticated user.
+
+Assessment schema:
+
+- `questions` stores questionnaire text, scoring fields, and framework excerpts for RAG-style retrieval.
+- `assessments` stores finalized scores, failed question ids, raw responses, and AI recommendations.
 
 ## Deployment Notes
 
@@ -113,11 +126,13 @@ Security:
 
 Run:
 
-- [supabase/migrations/202603271300_initial_schema.sql](/Users/chase/code/cosc-3380/group-project/webapp/hackmisso-26/supabase/migrations/202603271300_initial_schema.sql)
+- [supabase/migrations/202603271300_initial_schema.sql](/Users/chase/code/hackmisso-26/supabase/migrations/202603271300_initial_schema.sql)
+- [supabase/migrations/202603271830_assessment_schema.sql](/Users/chase/code/hackmisso-26/supabase/migrations/202603271830_assessment_schema.sql)
 
 Optional:
 
-- [supabase/seed.sql](/Users/chase/code/cosc-3380/group-project/webapp/hackmisso-26/supabase/seed.sql)
+- [supabase/seed.sql](/Users/chase/code/hackmisso-26/supabase/seed.sql)
+- [supabase/questions.sql](/Users/chase/code/hackmisso-26/supabase/questions.sql)
 
 ## Commands
 

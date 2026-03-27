@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createServerClient } from "@/lib/supabase/server";
+import { insertCompletedAssessment } from "@/lib/assessment-dal";
+import { createServerClient } from "@/lib/supabase";
+import type { AssessmentRecommendation } from "@/types/database";
 
 async function getCurrentUserId() {
   const supabase = await createServerClient();
@@ -116,67 +118,61 @@ export interface ProcessedVulnerability {
   questionId: string;
   issue: string;
   priorityScore: number;
-  category: string; //"Quick Win", "Medium Priority", "Major Project"
+  category: string;
 }
 
-export async function processAssessment(responses: FrontendResponse[]){
-  //get authenticated user and supabase client
-  const{ supabase, userId } = await getCurrentUserId();
-
+export async function processAssessment(responses: FrontendResponse[]) {
+  await getCurrentUserId();
   const vulnerabilities: ProcessedVulnerability[] = [];
   let totalScore = 0;
   let maxPossibleScore = 0;
 
-  for(const response of responses){
-
+  for (const response of responses) {
     maxPossibleScore += response.riskWeight;
 
-    if(response.userAnsweredYes){
-      //secure point
+    if (response.userAnsweredYes) {
       totalScore += response.riskWeight;
-    }
-    else{
-      //vulnerability, calculate priority
-      const priorityScore = response.riskWeight / response.effortLevel;
+    } else {
+      const priorityScore = response.riskWeight + response.effortLevel;
 
       let category = "Medium Priority";
-      if(priorityScore >= 3.0) category = "Quick Win";
-      if(priorityScore <= 1.0 && response.effortLevel === 3) category = "Major Project";
+      if (priorityScore >= 4) category = "Quick Win";
+      if (priorityScore >= 6) category = "Major Project";
 
       vulnerabilities.push({
         questionId: response.questionId,
         issue: response.questionText,
         priorityScore: Number(priorityScore.toFixed(2)),
-        category: category
+        category,
       });
     }
-
-    //sort vulnerabilities from highest to lowest priority
-    vulnerabilities.sort((a, b) => b.priorityScore - a.priorityScore);
-    const overallRiskRating = (totalScore / maxPossibleScore) * 100;
-
-    //quick win count
-    const highPriorityCount = vulnerabilities.filter(v => v.priorityScore >= 3.0).length;
-
-    //supabase insert logic
-    const{ data, error } = await supabase.from('assessments').insert({
-      user_id: userId,
-      total_score: totalScore,
-      high_priority_flags: highPriorityCount,
-      raw_responses: responses //storing original json is case we need it later
-    }).select().single();
-
-    if(error){
-      throw new Error("Failed to save assessment: " + error.message);
-    }
-
-    revalidatePath("/dashboard");
-
-    return{
-      success : true,
-      assessmentId: data.id,
-      securityHealthScore: Math.round(overallRiskRating),
-      prioritizedVulnerabilities: vulnerabilities
-    };
   }
+
+  vulnerabilities.sort((a, b) => b.priorityScore - a.priorityScore);
+
+  const overallRiskRating = maxPossibleScore === 0 ? 0 : (totalScore / maxPossibleScore) * 100;
+  const highPriorityCount = vulnerabilities.filter((v) => v.priorityScore >= 4).length;
+  const aiRecommendations: AssessmentRecommendation[] = vulnerabilities.map((vulnerability) => ({
+    title: vulnerability.issue,
+    summary: `Address ${vulnerability.issue.toLowerCase()} to improve your score and reduce near-term cyber risk.`,
+    priority: vulnerability.priorityScore >= 6 ? "high" : vulnerability.priorityScore >= 4 ? "medium" : "low",
+  }));
+
+  const assessment = await insertCompletedAssessment({
+    total_score: totalScore,
+    score_percent: Number(overallRiskRating.toFixed(2)),
+    high_priority_flags: highPriorityCount,
+    raw_responses: responses,
+    failed_question_ids: vulnerabilities.map((vulnerability) => vulnerability.questionId),
+    ai_recommendations: aiRecommendations,
+  });
+
+  revalidatePath("/dashboard");
+
+  return {
+    success: true,
+    assessmentId: assessment.id,
+    securityHealthScore: Math.round(overallRiskRating),
+    prioritizedVulnerabilities: vulnerabilities,
+  };
 }

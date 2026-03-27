@@ -13,6 +13,87 @@ create table if not exists public.questions (
   created_at timestamptz not null default timezone('utc'::text, now())
 );
 
+alter table public.questions
+  add column if not exists display_order integer,
+  add column if not exists framework_name text,
+  add column if not exists framework_reference text,
+  add column if not exists framework_excerpt text,
+  add column if not exists created_at timestamptz not null default timezone('utc'::text, now());
+
+update public.questions
+set
+  display_order = case id
+    when 'q1' then 1
+    when 'q2' then 2
+    when 'q3' then 3
+    when 'q4' then 4
+    when 'q5' then 5
+    when 'q6' then 6
+    when 'q7' then 7
+    when 'q8' then 8
+    when 'q9' then 9
+    when 'q10' then 10
+    else display_order
+  end,
+  framework_name = case id
+    when 'q1' then 'CIS Controls'
+    when 'q2' then 'ISO 27001'
+    when 'q3' then 'CIS Controls'
+    when 'q4' then 'CIS Controls'
+    when 'q5' then 'NIST CSF'
+    when 'q6' then 'CIS Controls'
+    when 'q7' then 'NIST CSF'
+    when 'q8' then 'CIS Controls'
+    when 'q9' then 'NIST CSF'
+    when 'q10' then 'NIST CSF'
+    else framework_name
+  end,
+  framework_reference = case id
+    when 'q1' then 'CIS Control 1'
+    when 'q2' then 'ISO/IEC 27001 A.5.18'
+    when 'q3' then 'CIS Control 6'
+    when 'q4' then 'CIS Control 7'
+    when 'q5' then 'PR.AA-01'
+    when 'q6' then 'CIS Control 5'
+    when 'q7' then 'PR.AT-01'
+    when 'q8' then 'CIS Control 10'
+    when 'q9' then 'RS.RP-01'
+    when 'q10' then 'RC.RP-01'
+    else framework_reference
+  end,
+  framework_excerpt = case id
+    when 'q1' then 'Maintain an accurate, detailed inventory of enterprise assets so only authorized devices can access systems and untracked devices can be investigated quickly.'
+    when 'q2' then 'Access rights should be provisioned, reviewed, and revoked promptly so former personnel cannot retain access to email, SaaS tools, or sensitive business data.'
+    when 'q3' then 'Require phishing-resistant or, at minimum, multi-factor authentication for administrative and business-critical systems to reduce account takeover risk.'
+    when 'q4' then 'Establish and enforce a vulnerability management process that applies security patches quickly, especially for internet-facing systems and common business software.'
+    when 'q5' then 'Define and enforce least-privilege access so sensitive records, shared drives, and financial tools are available only to approved personnel with a business need.'
+    when 'q6' then 'Use centralized credential management and strong unique passwords for workforce accounts to reduce credential reuse and improve recovery when accounts are exposed.'
+    when 'q7' then 'Provide recurring security awareness training so personnel can identify phishing, business email compromise, and unsafe sharing behavior before incidents escalate.'
+    when 'q8' then 'Deploy and maintain anti-malware protections with current signatures and monitoring across endpoints so commodity threats are blocked before spreading.'
+    when 'q9' then 'Document response roles, communications, containment steps, and escalation paths so the team can act immediately during a security incident instead of improvising.'
+    when 'q10' then 'Maintain protected backups and recovery procedures for critical business data so ransomware, accidental deletion, or infrastructure failure does not become existential.'
+    else framework_excerpt
+  end
+where id in ('q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10');
+
+alter table public.questions
+  alter column display_order set not null,
+  alter column framework_name set not null,
+  alter column framework_reference set not null,
+  alter column framework_excerpt set not null;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'questions_display_order_key'
+      and conrelid = 'public.questions'::regclass
+  ) then
+    alter table public.questions add constraint questions_display_order_key unique (display_order);
+  end if;
+end $$;
+
 create table if not exists public.assessments (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profiles(id) on delete cascade,
@@ -24,6 +105,25 @@ create table if not exists public.assessments (
   ai_recommendations jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default timezone('utc'::text, now())
 );
+
+alter table public.assessments
+  add column if not exists score_percent numeric,
+  add column if not exists failed_question_ids text[] not null default '{}'::text[],
+  add column if not exists ai_recommendations jsonb not null default '[]'::jsonb;
+
+update public.assessments
+set score_percent = case
+  when score_percent is not null then score_percent
+  when total_score is null or total_score <= 0 then 0
+  else least(100, greatest(0, round((total_score / 28.0) * 100, 2)))
+end;
+
+alter table public.assessments
+  alter column user_id set not null,
+  alter column total_score set not null,
+  alter column score_percent set not null,
+  alter column high_priority_flags set not null,
+  alter column created_at set default timezone('utc'::text, now());
 
 alter table public.questions enable row level security;
 alter table public.assessments enable row level security;
