@@ -1,34 +1,14 @@
 import { redirect } from "next/navigation";
-import { ActivityFeed } from "@/components/dashboard/activity-feed";
-import { DashboardIntro } from "@/components/dashboard/dashboard-intro";
-import { DashboardStats } from "@/components/dashboard/dashboard-stats";
-import { NotesPanel } from "@/components/dashboard/notes-panel";
-import { ProjectOverviewCard } from "@/components/dashboard/project-overview-card";
-import { ProjectSections } from "@/components/dashboard/project-sections";
-import { ProjectSettingsCard } from "@/components/dashboard/project-settings-card";
-import { SetupNotice } from "@/components/layout/setup-notice";
-import { createServerClientSafe } from "@/lib/supabase/server";
-import { getDashboardData } from "@/lib/data/dashboard";
-import { hasSupabaseEnv } from "@/lib/supabase/env";
+import { ActivityFeed, DashboardIntro, DashboardStats, NotesPanel, ProjectOverviewCard, ProjectSections, ProjectSettingsCard, getDashboardData } from "@/components/dashboard";
+import { SetupNotice } from "@/components/site";
+import { createServerClientSafe, hasSupabaseEnv } from "@/lib/supabase";
 
 export default async function DashboardPage() {
-  if (!hasSupabaseEnv()) {
-    return <SetupNotice />;
-  }
-
+  if (!hasSupabaseEnv()) return <SetupNotice />;
   const supabase = await createServerClientSafe();
-
-  if (!supabase) {
-    return <SetupNotice />;
-  }
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/sign-in");
-  }
+  if (!supabase) return <SetupNotice />;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/sign-in");
 
   const data = await getDashboardData(supabase, user.id);
 
@@ -43,9 +23,7 @@ export default async function DashboardPage() {
           <NotesPanel notes={data.notes} projectId={data.project?.id ?? null} />
           <ActivityFeed notes={data.notes} />
         </div>
-        <div className="space-y-6">
-          <ProjectSettingsCard profile={data.profile} project={data.project} />
-        </div>
+        <div className="space-y-6"><ProjectSettingsCard profile={data.profile} project={data.project} /></div>
       </div>
     </div>
   );

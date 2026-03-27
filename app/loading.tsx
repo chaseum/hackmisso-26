@@ -1,5 +1,5 @@
-import { AppShell } from "@/components/layout/app-shell";
-import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
+import { AppShell } from "@/components/site";
+import { LoadingSkeleton } from "@/components/ui";
 
 export default function Loading() {
   return (
