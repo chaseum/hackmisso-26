@@ -1,38 +1,70 @@
-# Hackathon Starter
+# SeKeyity
 
-Production-quality starter for hackathons, case competitions, and pitch demos using Next.js App Router, TypeScript, Supabase SSR auth, Tailwind CSS, and Motion for React.
+SeKeyity is a Next.js application for running lightweight cybersecurity assessments for nonprofits, student organizations, startups, and small businesses. It combines authenticated assessment workflows, framework-backed recommendations, reporting, and follow-up action surfaces in a single demo-ready product.
 
-## Stack
+## Overview
 
-- Next.js App Router with TypeScript
-- Supabase for auth and Postgres
-- Tailwind CSS for styling
-- Motion for React for transitions and interaction polish
-- ESLint and strict TypeScript for fast iteration with guardrails
+The current product flow is:
 
-## What You Get
+1. A user creates an account.
+2. The app redirects to a pre-questionnaire that captures organization name, type, and size.
+3. The user completes the cybersecurity questionnaire.
+4. The API scores the responses, stores the assessment, and generates AI-assisted recommendations grounded in the seeded CIS/NIST control excerpts.
+5. The user can review results across the dashboard, report, alerts, and related support pages.
 
-- Responsive landing page with a polished marketing feel
-- Supabase email/password auth
-- Sign-up creates the account first, then redirects to a pre-questionnaire for organization name, type, and size
-- Protected dashboard route with session-aware navbar
-- Barebones `/test-harness` client page for end-to-end cyber assessment testing
-- Minimal project/profile/notes data model with RLS
-- `GET/POST /api/assessment` flow for question fetch, scoring, persistence, and AI recommendations
-- Reusable UI components for buttons, cards, inputs, empty states, and layout
-- Dashboard sections tailored for case competition workflows
-- Clear setup docs and environment template
+## Core Capabilities
 
-## Project Structure
+- Email/password authentication with Supabase SSR session handling
+- Guided onboarding with a dedicated pre-questionnaire step
+- Questionnaire submission and assessment persistence
+- AI-generated remediation recommendations with fallback behavior when model calls fail
+- Dashboard, report, alerts, and policy support surfaces derived from the latest assessment
+- PDF report export and mitigation tracking
+- Lightweight test harness route for validating assessment request/response behavior
+
+## Technology Stack
+
+- Next.js App Router
+- React 19
+- TypeScript
+- Supabase Auth and Postgres
+- Tailwind CSS
+- Motion for React
+- OpenAI API
+- Recharts
+- pdf-lib
+
+## Application Structure
 
 ```text
 app/
+  alerts/
+  api/
+  dashboard/
+  knowledge-base/
+  mission-control/
+  prequestionnaire/
+  questionnaire/
+  report/
+  settings/
+  sign-in/
+  sign-up/
+  test-harness/
 components/
 lib/
 supabase/
 types/
-public/
 ```
+
+## Key Runtime Paths
+
+- [app/sign-up/page.tsx](/Users/chase/code/hackmisso-26/app/sign-up/page.tsx): account creation
+- [app/prequestionnaire/page.tsx](/Users/chase/code/hackmisso-26/app/prequestionnaire/page.tsx): organization profile capture
+- [app/questionnaire/page.tsx](/Users/chase/code/hackmisso-26/app/questionnaire/page.tsx): primary assessment flow
+- [app/api/assessment/route.ts](/Users/chase/code/hackmisso-26/app/api/assessment/route.ts): question fetch and assessment submission
+- [lib/ai.ts](/Users/chase/code/hackmisso-26/lib/ai.ts): recommendation generation and fallback logic
+- [lib/assessment-dal.ts](/Users/chase/code/hackmisso-26/lib/assessment-dal.ts): database access for questions and assessments
+- [app/test-harness/page.tsx](/Users/chase/code/hackmisso-26/app/test-harness/page.tsx): minimal end-to-end assessment validation route
 
 ## Environment Variables
 
@@ -51,51 +83,45 @@ Required:
 Optional:
 
 - `SUPABASE_SERVICE_ROLE_KEY`
-  Only for future server-side admin scripts. This starter does not use it by default.
+  Required only for server-side administrative operations such as account deletion.
 
-## Local Setup
+## Local Development
 
-1. Install dependencies:
+1. Install dependencies.
 
 ```bash
 npm install
 ```
 
-2. Add your Supabase project URL, anon key, and OpenAI API key to `.env.local`.
+2. Populate `.env.local` with the required variables.
 
-3. Start the development server:
+3. Run the development server.
 
 ```bash
 npm run dev
 ```
 
-4. Open the URL printed by Next.js. If port `3000` is busy, Next.js will use another port such as `3001`.
-5. Use the navbar link or open `/test-harness` to exercise the assessment flow.
+4. Open the URL printed by Next.js. If `3000` is unavailable, Next.js will automatically choose another port.
 
 ## Supabase Setup
 
-1. Create a new Supabase project.
-2. In Supabase, enable Email auth under `Authentication -> Providers`.
-3. Copy the project URL and anon key into `.env.local`.
-4. Open the SQL editor and run the migrations in order:
+1. Create a Supabase project.
+2. Enable email/password authentication in `Authentication -> Providers`.
+3. Add the project URL and anon key to your local environment.
+4. Run the migrations below in order using the Supabase SQL editor:
    - [supabase/migrations/202603271300_initial_schema.sql](/Users/chase/code/hackmisso-26/supabase/migrations/202603271300_initial_schema.sql)
    - [supabase/migrations/202603271830_assessment_schema.sql](/Users/chase/code/hackmisso-26/supabase/migrations/202603271830_assessment_schema.sql)
    - [supabase/migrations/202603271945_add_org_profile_to_assessments.sql](/Users/chase/code/hackmisso-26/supabase/migrations/202603271945_add_org_profile_to_assessments.sql)
    - [supabase/migrations/202603281030_add_mitigated_alert_titles.sql](/Users/chase/code/hackmisso-26/supabase/migrations/202603281030_add_mitigated_alert_titles.sql)
-5. Optional:
-   - update the UUID in [supabase/seed.sql](/Users/chase/code/hackmisso-26/supabase/seed.sql) and run it for demo project data
-   - run [supabase/questions.sql](/Users/chase/code/hackmisso-26/supabase/questions.sql) to create or refresh the assessment question set manually
 
-## Auth Architecture
+Optional data:
 
-- Middleware refreshes the Supabase session and protects `/dashboard`.
-- Server components use SSR-compatible Supabase clients.
-- Auth forms use server actions for sign-in, sign-up, and sign-out.
-- A trigger creates or updates `profiles` records when new auth users are created.
+- [supabase/seed.sql](/Users/chase/code/hackmisso-26/supabase/seed.sql): demo project/profile seed data
+- [supabase/questions.sql](/Users/chase/code/hackmisso-26/supabase/questions.sql): question refresh script
 
-## Database Schema
+## Data Model
 
-Tables:
+Primary tables:
 
 - `profiles`
 - `projects`
@@ -103,77 +129,36 @@ Tables:
 - `questions`
 - `assessments`
 
-Security:
+Assessment-specific notes:
 
-- Profiles are only visible and editable by the owning user.
-- Projects are only accessible to their owner.
-- Notes are scoped to the author and the owner of the related project.
-- Questions are readable by authenticated users.
-- Assessments are readable and insertable only by the owning authenticated user.
+- `questions` stores the assessment prompts, weighting data, and framework metadata including `framework_name`, `framework_reference`, and `framework_excerpt`
+- `assessments` stores raw responses, failed controls, organization profile, generated recommendations, mitigation tracking, and computed scores
 
-Assessment schema:
+## Security Model
 
-- `questions` stores questionnaire text, scoring fields, and framework excerpts for RAG-style retrieval.
-- `assessments` stores finalized scores, failed question ids, raw responses, and AI recommendations.
-- Assessment recommendations are generated in [`lib/ai.ts`](/Users/chase/code/hackmisso-26/lib/ai.ts) and served through [`app/api/assessment/route.ts`](/Users/chase/code/hackmisso-26/app/api/assessment/route.ts).
-
-## Deployment Notes
-
-- Works on Vercel with environment variables set in the project settings.
-- Run the same SQL migration against the production Supabase project before launch.
-- Keep the anon key in client-facing env vars only. Do not expose the service role key to the browser.
-
-## What To Customize First
-
-1. Replace the landing page copy and brand styling.
-2. Adjust the `projects` schema to match your competition or demo workflow.
-3. Add your real dashboard sections, metrics, and project narrative blocks.
-4. Decide whether to add Supabase Storage uploads or a public share page.
-
-## Manual SQL To Run
-
-Run:
-
-- [supabase/migrations/202603271300_initial_schema.sql](/Users/chase/code/hackmisso-26/supabase/migrations/202603271300_initial_schema.sql)
-- [supabase/migrations/202603271830_assessment_schema.sql](/Users/chase/code/hackmisso-26/supabase/migrations/202603271830_assessment_schema.sql)
-- [supabase/migrations/202603271945_add_org_profile_to_assessments.sql](/Users/chase/code/hackmisso-26/supabase/migrations/202603271945_add_org_profile_to_assessments.sql)
-- [supabase/migrations/202603281030_add_mitigated_alert_titles.sql](/Users/chase/code/hackmisso-26/supabase/migrations/202603281030_add_mitigated_alert_titles.sql)
-
-Optional:
-
-- [supabase/seed.sql](/Users/chase/code/hackmisso-26/supabase/seed.sql)
-- [supabase/questions.sql](/Users/chase/code/hackmisso-26/supabase/questions.sql)
+- Middleware refreshes Supabase sessions and guards protected routes
+- Row-level security restricts records to the authenticated owner where applicable
+- Assessment question data is available to authenticated users
+- Assessment records are readable and writable only by the owning user
 
 ## Commands
 
-Install:
-
-```bash
-npm install
-```
-
-Develop:
-
 ```bash
 npm run dev
-```
-
-Lint:
-
-```bash
 npm run lint
-```
-
-Build:
-
-```bash
+npm run typecheck
 npm run build
 ```
 
-## Optional Next Enhancements
+## Notes for Contributors
 
-- Dark mode toggle
-- Supabase Storage file uploads for pitch assets
-- Toast notifications for form success and error states
-- Public read-only share page for project demos
-- Demo data generator for onboarding judges quickly
+- The active AI recommendation path is centralized in [lib/ai.ts](/Users/chase/code/hackmisso-26/lib/ai.ts)
+- The assessment API is the single submission path for the questionnaire and test harness
+- Organization name, type, and size belong in the pre-questionnaire step, not sign-up
+- When updating schema-dependent behavior, keep the Supabase migrations and README aligned
+
+## Deployment
+
+- Configure the same environment variables in the deployment target
+- Apply the same migrations to the target Supabase project before release
+- Do not expose `SUPABASE_SERVICE_ROLE_KEY` to the browser
