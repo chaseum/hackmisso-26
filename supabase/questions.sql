@@ -66,7 +66,7 @@ insert into public.questions (
     2.0,
     'CIS Controls',
     'CIS Control 1',
-    'Maintain an accurate, detailed inventory of enterprise assets so only authorized devices can access systems and untracked devices can be investigated quickly.'
+    'Actively manage (inventory, track, and correct) all enterprise assets connected to the infrastructure physically, virtually, or remotely. Without knowing exactly what devices are touching your network, you cannot secure them, leaving blind spots where attackers can hide unmonitored.'
   ),
   (
     'q2',
@@ -77,7 +77,7 @@ insert into public.questions (
     1.0,
     'ISO 27001',
     'ISO/IEC 27001 A.5.18',
-    'Access rights should be provisioned, reviewed, and revoked promptly so former personnel cannot retain access to email, SaaS tools, or sensitive business data.'
+    'Formal procedures must be implemented to manage the allocation, review, and revocation of access rights. When personnel leave, their access to all information processing facilities and services must be terminated immediately. Orphaned accounts are a primary vector for insider threats and unauthorized external access.'
   ),
   (
     'q3',
@@ -88,7 +88,7 @@ insert into public.questions (
     1.0,
     'CIS Controls',
     'CIS Control 6',
-    'Require phishing-resistant or, at minimum, multi-factor authentication for administrative and business-critical systems to reduce account takeover risk.'
+    'Use secure authentication credentials, such as Multi-Factor Authentication (MFA), for all administrative access, remote access, and enterprise-facing applications. MFA adds a critical layer of security by requiring two or more independent credentials, neutralizing the threat of compromised, reused, or easily guessed passwords.'
   ),
   (
     'q4',
@@ -99,7 +99,7 @@ insert into public.questions (
     1.0,
     'CIS Controls',
     'CIS Control 7',
-    'Establish and enforce a vulnerability management process that applies security patches quickly, especially for internet-facing systems and common business software.'
+    'Develop a plan to continuously assess and track vulnerabilities on all enterprise assets. Ensure software, operating systems, and applications are updated with the latest security patches. Unpatched software contains known, public exploits that attackers actively scan for and use to compromise systems automatically.'
   ),
   (
     'q5',
@@ -110,7 +110,7 @@ insert into public.questions (
     1.0,
     'NIST CSF',
     'PR.AA-01',
-    'Define and enforce least-privilege access so sensitive records, shared drives, and financial tools are available only to approved personnel with a business need.'
+    'Access permissions, entitlements, and authorizations are managed, incorporating the principles of least privilege and separation of duties. Users should only have access to the specific data and systems necessary for their role. Over-permissioning allows a single compromised user account to grant an attacker access to the entire organization''s sensitive data.'
   ),
   (
     'q6',
@@ -121,7 +121,7 @@ insert into public.questions (
     2.0,
     'CIS Controls',
     'CIS Control 5',
-    'Use centralized credential management and strong unique passwords for workforce accounts to reduce credential reuse and improve recovery when accounts are exposed.'
+    'Establish and manage an inventory of accounts, including the requirement for complex, unique passwords across all systems. Utilizing enterprise password managers ensures employees do not resort to weak or reused passwords across personal and business accounts, significantly lowering the risk of credential stuffing attacks.'
   ),
   (
     'q7',
@@ -132,7 +132,7 @@ insert into public.questions (
     2.0,
     'NIST CSF',
     'PR.AT-01',
-    'Provide recurring security awareness training so personnel can identify phishing, business email compromise, and unsafe sharing behavior before incidents escalate.'
+    'Personnel are trained and tested on their cybersecurity responsibilities and are aware of the organization''s security policies. Human error is a leading cause of security breaches. Regular training on recognizing phishing emails, social engineering, and safe web browsing transforms employees from the weakest link into a strong line of defense.'
   ),
   (
     'q8',
@@ -143,7 +143,7 @@ insert into public.questions (
     1.0,
     'CIS Controls',
     'CIS Control 10',
-    'Deploy and maintain anti-malware protections with current signatures and monitoring across endpoints so commodity threats are blocked before spreading.'
+    'Prevent or control the installation, spread, and execution of malicious applications, code, or scripts on enterprise assets. Centrally managed anti-malware software must be active, continuously updated, and configured to alert administrators of infections to stop ransomware or spyware before it can execute or exfiltrate data.'
   ),
   (
     'q9',
@@ -154,7 +154,7 @@ insert into public.questions (
     3.0,
     'NIST CSF',
     'RS.RP-01',
-    'Document response roles, communications, containment steps, and escalation paths so the team can act immediately during a security incident instead of improvising.'
+    'An incident response plan is executed during or after an event. Organizations must have a documented and tested playbook detailing who to contact, how to contain a breach, and how to preserve evidence. Without a clear plan, response times drag out, causing increased data loss, operational downtime, and panic.'
   ),
   (
     'q10',
@@ -165,7 +165,7 @@ insert into public.questions (
     3.0,
     'NIST CSF',
     'RC.RP-01',
-    'Maintain protected backups and recovery procedures for critical business data so ransomware, accidental deletion, or infrastructure failure does not become existential.'
+    'Recovery processes and procedures are maintained and tested to ensure timely restoration of systems and assets affected by cybersecurity events. Backups must be automated, encrypted, and physically or logically isolated (offline/immutable) from the primary network to ensure they cannot be corrupted or encrypted by ransomware.'
   )
 on conflict (id) do update
 set
