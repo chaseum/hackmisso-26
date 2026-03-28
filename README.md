@@ -15,8 +15,10 @@ Production-quality starter for hackathons, case competitions, and pitch demos us
 - Responsive landing page with a polished marketing feel
 - Supabase email/password auth
 - Protected dashboard route with session-aware navbar
+- Barebones `/test-harness` client page for end-to-end cyber assessment testing
 - Minimal project/profile/notes data model with RLS
-- Reusable UI components for buttons, cards, inputs, empty states, modal, and layout
+- `GET/POST /api/assessment` flow for question fetch, scoring, persistence, and AI recommendations
+- Reusable UI components for buttons, cards, inputs, empty states, and layout
 - Dashboard sections tailored for case competition workflows
 - Clear setup docs and environment template
 
@@ -58,7 +60,7 @@ Optional:
 npm install
 ```
 
-2. Add your Supabase project URL and anon key to `.env.local`.
+2. Add your Supabase project URL, anon key, and OpenAI API key to `.env.local`.
 
 3. Start the development server:
 
@@ -66,7 +68,8 @@ npm install
 npm run dev
 ```
 
-4. Open `http://localhost:3000`.
+4. Open the URL printed by Next.js. If port `3000` is busy, Next.js will use another port such as `3001`.
+5. Use the navbar link or open `/test-harness` to exercise the assessment flow.
 
 ## Supabase Setup
 
@@ -109,6 +112,7 @@ Assessment schema:
 
 - `questions` stores questionnaire text, scoring fields, and framework excerpts for RAG-style retrieval.
 - `assessments` stores finalized scores, failed question ids, raw responses, and AI recommendations.
+- Assessment recommendations are generated in [`lib/ai.ts`](/Users/chase/code/hackmisso-26/lib/ai.ts) and served through [`app/api/assessment/route.ts`](/Users/chase/code/hackmisso-26/app/api/assessment/route.ts).
 
 ## Deployment Notes
 

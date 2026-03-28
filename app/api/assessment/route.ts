@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { getAllQuestions, getFrameworkTextForFailedQuestions, insertCompletedAssessment } from "@/lib/assessment-dal";
 import type { AssessmentRecommendation, AssessmentResponse, QuestionRow } from "@/types/database";
+import {
+  buildFallbackRecommendations,
+  formatRecommendationsAsMarkdown,
+  generateCyberRecommendations,
+  type FailedQuestionContext,
+} from "@/lib/ai";
 
 type AssessmentAnswerInput = {
   questionId: string;
@@ -12,22 +18,6 @@ type AssessmentRequestBody =
   | {
       answers: AssessmentAnswerInput[];
     };
-
-type FailedQuestionContext = {
-  questionId: string;
-  questionText: string;
-  category: string;
-  riskWeight: number;
-  effortLevel: number;
-  priorityScore: number;
-  frameworkName: string;
-  frameworkReference: string;
-  frameworkExcerpt: string;
-};
-
-type OpenAIRecommendationsResponse = {
-  recommendations?: AssessmentRecommendation[];
-};
 
 function normalizeAnswers(body: AssessmentRequestBody) {
   if (Array.isArray(body)) {
@@ -69,133 +59,6 @@ function buildResponseRows(answers: AssessmentAnswerInput[], questionMap: Map<st
   }
 
   return responses;
-}
-
-function parseOpenAIJson(content: string) {
-  try {
-    return JSON.parse(content) as OpenAIRecommendationsResponse;
-  } catch {
-    throw new Error("OpenAI returned invalid JSON.");
-  }
-}
-
-function formatRecommendationsAsMarkdown(recommendations: AssessmentRecommendation[]) {
-  if (recommendations.length === 0) {
-    return [
-      "# Cybersecurity Recommendations",
-      "",
-      "## Executive Summary",
-      "- No remediation recommendations were generated.",
-    ].join("\n");
-  }
-
-  return [
-    "# Cybersecurity Recommendations",
-    "",
-    "## Executive Summary",
-    `- ${recommendations.length} prioritized recommendation(s) were generated from the failed controls.`,
-    "",
-    "## Prioritized Recommendations",
-    ...recommendations.map((recommendation, index) =>
-      [
-        `### ${index + 1}. ${recommendation.title}`,
-        `- Priority: ${recommendation.priority ?? "unspecified"}`,
-        recommendation.framework_reference
-          ? `- Framework reference: ${recommendation.framework_reference}`
-          : null,
-        `- Action: ${recommendation.summary}`,
-      ]
-        .filter(Boolean)
-        .join("\n"),
-    ),
-  ].join("\n\n");
-}
-
-function buildFallbackRecommendations(failedQuestions: FailedQuestionContext[]): AssessmentRecommendation[] {
-  if (failedQuestions.length === 0) {
-    return [
-      {
-        title: "No failed controls detected",
-        summary: "All submitted answers were marked compliant, so no remediation steps were generated.",
-        priority: "low",
-      },
-    ];
-  }
-
-  return failedQuestions.slice(0, 5).map((question) => ({
-    title: `Review ${question.frameworkReference}`,
-    summary: `Address "${question.questionText}" based on the referenced control and prioritize it according to the current risk score.`,
-    framework_reference: question.frameworkReference,
-    priority: question.priorityScore >= 3 ? "high" : "medium",
-  }));
-}
-
-async function generateRecommendations(failedQuestions: FailedQuestionContext[]) {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    throw new Error("Missing OPENAI_API_KEY.");
-  }
-
-  const promptPayload = failedQuestions.map((question) => ({
-    question_id: question.questionId,
-    question_text: question.questionText,
-    category: question.category,
-    priority_score: question.priorityScore,
-    risk_weight: question.riskWeight,
-    effort_level: question.effortLevel,
-    framework_name: question.frameworkName,
-    framework_reference: question.frameworkReference,
-    framework_excerpt: question.frameworkExcerpt,
-  }));
-
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      temperature: 0.2,
-      response_format: { type: "json_object" },
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a cybersecurity assessment assistant. Return strict JSON with a top-level `recommendations` array. Each recommendation must include `title`, `summary`, optional `framework_reference`, and optional `priority` set to low, medium, or high.",
-        },
-        {
-          role: "user",
-          content: `Generate prioritized remediation recommendations for these failed cybersecurity controls. Keep each summary concise and actionable for a small business team.\n\n${JSON.stringify(promptPayload, null, 2)}`,
-        },
-      ],
-    }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`OpenAI request failed: ${response.status} ${errorText}`);
-  }
-
-  const data = (await response.json()) as {
-    choices?: Array<{
-      message?: {
-        content?: string | null;
-      };
-    }>;
-  };
-
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) {
-    throw new Error("OpenAI returned an empty response.");
-  }
-
-  const parsed = parseOpenAIJson(content);
-  if (!Array.isArray(parsed.recommendations)) {
-    throw new Error("OpenAI response did not include a recommendations array.");
-  }
-
-  return parsed.recommendations;
 }
 
 export async function POST(request: Request) {
@@ -263,7 +126,7 @@ export async function POST(request: Request) {
       recommendations = buildFallbackRecommendations([]);
     } else {
       try {
-        recommendations = await generateRecommendations(failedQuestions);
+        recommendations = await generateCyberRecommendations(failedQuestions);
       } catch (error) {
         console.error("Falling back after OpenAI recommendation failure:", error);
         recommendations = buildFallbackRecommendations(failedQuestions);
