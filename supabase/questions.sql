@@ -22,6 +22,7 @@ create table if not exists public.assessments (
   raw_responses jsonb not null,
   failed_question_ids text[] not null default '{}'::text[],
   ai_recommendations text not null default '',
+  mitigated_alert_titles text[] not null default '{}'::text[],
   created_at timestamptz not null default timezone('utc'::text, now())
 );
 
@@ -44,6 +45,13 @@ drop policy if exists "assessments are insertable by owner" on public.assessment
 create policy "assessments are insertable by owner"
   on public.assessments
   for insert
+  with check ((select auth.uid()) = user_id);
+
+drop policy if exists "assessments are updatable by owner" on public.assessments;
+create policy "assessments are updatable by owner"
+  on public.assessments
+  for update
+  using ((select auth.uid()) = user_id)
   with check ((select auth.uid()) = user_id);
 
 insert into public.questions (

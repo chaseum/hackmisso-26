@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Copy, Loader2, Sparkles } from "lucide-react";
+import { FormattedAiContent } from "@/components/formatted-ai-content";
 import type { AssessmentRecommendation } from "@/types/database";
 
 const TIMEFRAME_CONFIG = [
@@ -354,14 +355,14 @@ export function RecommendationBrowser({ recommendations }: { recommendations: As
                     {activeRecommendation.priority ?? "low"}
                   </span>
                 </div>
-                <p className="text-base leading-8 text-slate-300">{activeRecommendation.why_it_matters}</p>
+                <FormattedAiContent content={activeRecommendation.why_it_matters} className="space-y-3 text-base text-slate-300" />
                 <motion.div
                   initial={{ opacity: 0.4, scale: 0.98 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.2, delay: 0.06 }}
                   className="mt-5 rounded-2xl border border-cyan-500/10 bg-cyan-500/5 p-5 text-base leading-8 text-cyan-100"
                 >
-                  {activeRecommendation.actionable_fix}
+                  <FormattedAiContent content={activeRecommendation.actionable_fix} className="space-y-3" />
                 </motion.div>
                 {activeRecommendation.framework_reference ? (
                   <p className="mt-5 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">

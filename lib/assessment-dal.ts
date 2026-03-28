@@ -80,6 +80,7 @@ export async function insertCompletedAssessment(input: InsertAssessmentInput) {
       raw_responses: input.raw_responses,
       failed_question_ids: input.failed_question_ids,
       ai_recommendations: input.ai_recommendations,
+      mitigated_alert_titles: input.mitigated_alert_titles ?? [],
       org_profile: input.org_profile,
     })
     .select("*")
@@ -87,6 +88,36 @@ export async function insertCompletedAssessment(input: InsertAssessmentInput) {
 
   if (error) {
     throw new Error(`Failed to insert assessment: ${error.message}`);
+  }
+
+  return data as AssessmentRow;
+}
+
+export async function updateAssessmentMitigations(input: {
+  assessmentId: string;
+  mitigatedAlertTitles: string[];
+}) {
+  const supabase = await createServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("You must be signed in.");
+  }
+
+  const { data, error } = await supabase
+    .from("assessments")
+    .update({
+      mitigated_alert_titles: input.mitigatedAlertTitles,
+    })
+    .eq("id", input.assessmentId)
+    .eq("user_id", user.id)
+    .select("*")
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to update mitigations: ${error.message}`);
   }
 
   return data as AssessmentRow;

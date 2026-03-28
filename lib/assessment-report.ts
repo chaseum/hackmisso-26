@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createServerClient } from "@/lib/supabase";
+import { getMitigationBoost } from "@/lib/mitigations";
 import { getLatestAssessmentForCurrentUser, getQuestionsByIds } from "@/lib/assessment-dal";
 import type { AssessmentRecommendation, AssessmentRow, QuestionRow } from "@/types/database";
 
@@ -29,7 +30,9 @@ export type AssessmentReportData = {
   alerts: AssessmentAlert[];
   recommendations: AssessmentRecommendation[];
   vulnerabilities: AssessmentVulnerability[];
-  scorePercent: number;
+  securityScore: number;
+  riskScorePercent: number;
+  mitigatedAlertTitles: string[];
   postureLabel: string;
   orgName: string;
 };
@@ -90,27 +93,27 @@ const priorityRank: Record<NonNullable<AssessmentRecommendation["priority"]>, nu
   low: 1,
 };
 
-function getPostureLabel(scorePercent: number) {
-  if (scorePercent <= 20) {
+function getPostureLabel(securityScore: number) {
+  if (securityScore >= 80) {
     return "Healthy posture";
   }
 
-  if (scorePercent <= 40) {
+  if (securityScore >= 60) {
     return "Moderate posture";
   }
 
   return "Needs attention";
 }
 
-export function getSecurityScore(scorePercent: number) {
-  return Math.max(0, 100 - Math.round(scorePercent));
+export function getSecurityScore(riskScorePercent: number) {
+  return Math.max(0, 100 - Math.round(riskScorePercent));
 }
 
-export function getSecurityLetterGrade(scorePercent: number) {
-  if (scorePercent <= 10) return "A";
-  if (scorePercent <= 20) return "B";
-  if (scorePercent <= 35) return "C";
-  if (scorePercent <= 50) return "D";
+export function getSecurityLetterGrade(securityScore: number) {
+  if (securityScore >= 90) return "A";
+  if (securityScore >= 80) return "B";
+  if (securityScore >= 65) return "C";
+  if (securityScore >= 50) return "D";
   return "F";
 }
 
@@ -244,6 +247,15 @@ export async function getLatestAssessmentReportData() {
   });
   const questions = assessment ? await getQuestionsByIds(assessment.failed_question_ids) : [];
   const vulnerabilities = buildVulnerabilities(assessment, questions, recommendations);
+  const alerts = recommendations.map(buildAlert);
+  const mitigatedAlertTitles = assessment?.mitigated_alert_titles ?? [];
+  const mitigationLift = alerts.reduce((sum, alert) => {
+    if (!mitigatedAlertTitles.includes(alert.title)) {
+      return sum;
+    }
+
+    return sum + getMitigationBoost(alert.level);
+  }, 0);
   const { data: profile } = user
     ? await supabase.from("profiles").select("team_name").eq("id", user.id).maybeSingle()
     : { data: null };
@@ -253,13 +265,18 @@ export async function getLatestAssessmentReportData() {
     (typeof user?.user_metadata.team_name === "string" ? user.user_metadata.team_name : "") ||
     "your organization";
 
+  const riskScorePercent = Math.round(assessment?.score_percent ?? 0);
+  const securityScore = Math.min(100, getSecurityScore(riskScorePercent) + mitigationLift);
+
   return {
     assessment,
-    alerts: recommendations.map(buildAlert),
+    alerts,
     recommendations,
     vulnerabilities,
-    scorePercent: Math.round(assessment?.score_percent ?? 0),
-    postureLabel: getPostureLabel(assessment?.score_percent ?? 0),
+    securityScore,
+    riskScorePercent,
+    mitigatedAlertTitles,
+    postureLabel: getPostureLabel(securityScore),
     orgName: fallbackOrgName,
   } satisfies AssessmentReportData;
 }

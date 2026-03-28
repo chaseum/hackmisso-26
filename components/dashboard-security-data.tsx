@@ -59,11 +59,11 @@ function getMetricVisual(label: string) {
 }
 
 function getScoreBarClass(scorePercent: number) {
-  if (scorePercent <= 20) {
+  if (scorePercent >= 80) {
     return "bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.55)]";
   }
 
-  if (scorePercent <= 40) {
+  if (scorePercent >= 60) {
     return "bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.45)]";
   }
 
@@ -102,7 +102,7 @@ export function DashboardSecurityData({
           .map(([category, count]) => ({
             category,
             count,
-            fillPercent: Number(((count / vulnerabilities.length) * scorePercent).toFixed(2)),
+            fillPercent: Number(((count / vulnerabilities.length) * 100).toFixed(2)),
             className: getCategoryBarClass(category),
           }))
       : [];

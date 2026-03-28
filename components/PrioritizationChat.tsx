@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Loader2, Sparkles } from "lucide-react";
+import { FormattedAiContent } from "@/components/formatted-ai-content";
 
 type JsonValue =
   | string
@@ -21,14 +22,66 @@ type PrioritizationChatProps = {
   assessmentResults?: { [key: string]: JsonValue };
 };
 
-const PROMPT_OPTIONS = [
-  "What is the absolute cheapest vulnerability I can fix today?",
-  "Explain my highest-risk alert to me like I am a beginner.",
-  "Create a step-by-step 30-day security plan for my student org.",
-] as const;
+type VulnerabilitySummary = {
+  title?: JsonValue;
+  priority?: JsonValue;
+  frameworkReference?: JsonValue;
+  category?: JsonValue;
+};
+
+function asVulnerabilities(value: JsonValue | undefined) {
+  if (!Array.isArray(value)) {
+    return [] as VulnerabilitySummary[];
+  }
+
+  return value.filter((item): item is VulnerabilitySummary => Boolean(item) && typeof item === "object");
+}
+
+function getPromptSuggestions(messages: ChatMessage[], payloadResults: { [key: string]: JsonValue }) {
+  const vulnerabilities = asVulnerabilities(payloadResults.vulnerabilities);
+  const highestPriorityVulnerability =
+    vulnerabilities.find((item) => item.priority === "high") ?? vulnerabilities[0] ?? null;
+  const latestAssistantMessage = [...messages].reverse().find((message) => message.role === "assistant")?.content.toLowerCase() ?? "";
+  const suggestions = new Set<string>();
+
+  if (messages.length <= 1) {
+    suggestions.add("What is the fastest vulnerability I can fix this week?");
+    suggestions.add("Explain my highest-risk issue like I am new to cybersecurity.");
+  }
+
+  if (highestPriorityVulnerability?.title && typeof highestPriorityVulnerability.title === "string") {
+    suggestions.add(`How do I fix "${highestPriorityVulnerability.title}" with a small budget?`);
+  }
+
+  if (latestAssistantMessage.includes("mfa") || latestAssistantMessage.includes("multi-factor")) {
+    suggestions.add("What are the easiest MFA tools to set up first?");
+  }
+
+  if (latestAssistantMessage.includes("backup")) {
+    suggestions.add("What does a safe backup setup look like for our team?");
+  }
+
+  if (latestAssistantMessage.includes("password")) {
+    suggestions.add("How should we roll out a password manager without disrupting everyone?");
+  }
+
+  if (latestAssistantMessage.includes("phishing") || latestAssistantMessage.includes("training")) {
+    suggestions.add("What phishing training should we run this month?");
+  }
+
+  if (latestAssistantMessage.includes("incident") || latestAssistantMessage.includes("response")) {
+    suggestions.add("Can you turn this into a first-response checklist for our team?");
+  }
+
+  suggestions.add("What should we fix this month after the top issue?");
+  suggestions.add("Give me a 30-day action plan based on these vulnerabilities.");
+  suggestions.add("What should I tell leadership about the biggest risk?");
+
+  return Array.from(suggestions).slice(0, 4);
+}
 
 export function PrioritizationChat({ results, assessmentResults }: PrioritizationChatProps) {
-  const payloadResults = results ?? assessmentResults ?? {};
+  const payloadResults = useMemo(() => results ?? assessmentResults ?? {}, [results, assessmentResults]);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
@@ -40,6 +93,7 @@ export function PrioritizationChat({ results, assessmentResults }: Prioritizatio
   const lastAnimatedAssistantIndexRef = useRef(-1);
   const [typingMessageIndex, setTypingMessageIndex] = useState<number | null>(0);
   const [visibleAssistantText, setVisibleAssistantText] = useState(messages[0].content);
+  const promptOptions = useMemo(() => getPromptSuggestions(messages, payloadResults), [messages, payloadResults]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -99,7 +153,7 @@ export function PrioritizationChat({ results, assessmentResults }: Prioritizatio
     setMessages((current) => [...current, { role: "assistant", content }]);
   }
 
-  async function handlePromptClick(userPrompt: (typeof PROMPT_OPTIONS)[number]) {
+  async function handlePromptClick(userPrompt: string) {
     if (isLoading) {
       return;
     }
@@ -116,6 +170,7 @@ export function PrioritizationChat({ results, assessmentResults }: Prioritizatio
         body: JSON.stringify({
           userPrompt,
           assessmentResults: payloadResults,
+          conversationHistory: messages,
         }),
       });
 
@@ -162,10 +217,12 @@ export function PrioritizationChat({ results, assessmentResults }: Prioritizatio
                     : "border border-white/8 bg-[#0b1624] text-slate-100"
                 }`}
               >
-                {message.renderedContent}
-                {message.role === "assistant" && index === typingMessageIndex ? (
-                  <span className="ml-1 inline-block h-5 w-0.5 animate-pulse bg-cyan-200 align-middle" />
-                ) : null}
+                {message.role === "assistant" ? (
+                  <FormattedAiContent content={message.renderedContent} className="space-y-3 text-slate-100" />
+                ) : (
+                  message.renderedContent
+                )}
+                {message.role === "assistant" && index === typingMessageIndex ? <span className="ml-1 inline-block h-5 w-0.5 animate-pulse bg-cyan-200 align-middle" /> : null}
               </div>
             </div>
           ))}
@@ -184,7 +241,7 @@ export function PrioritizationChat({ results, assessmentResults }: Prioritizatio
       </div>
 
       <div className="mt-6 flex flex-wrap gap-3">
-        {PROMPT_OPTIONS.map((prompt) => (
+        {promptOptions.map((prompt) => (
           <button
             key={prompt}
             type="button"

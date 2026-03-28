@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { CheckCircle2, Sparkles, Trophy } from "lucide-react";
+import { getMitigationBoost } from "@/lib/mitigations";
 import { makeRiskHref } from "@/lib/risk-links";
 
 type AlertItem = {
@@ -24,12 +26,6 @@ type PendingMitigationState = {
   alertTitle: string;
 };
 
-function getMitigationBoost(level: AlertItem["level"]) {
-  if (level === "high risk") return 6;
-  if (level === "medium risk") return 4;
-  return 2;
-}
-
 function isEasyMitigation(alert: AlertItem) {
   const combinedText = [alert.title, alert.description, alert.frameworkReference].join(" ").toLowerCase();
   return /(mfa|multi-factor|password|backup|training|antivirus|malware|device inventory|account access)/.test(combinedText);
@@ -38,15 +34,21 @@ function isEasyMitigation(alert: AlertItem) {
 export function AlertsMitigationBoard({
   alerts,
   baseSecurityScore,
+  assessmentId,
+  initialMitigatedTitles,
 }: {
   alerts: AlertItem[];
   baseSecurityScore: number;
+  assessmentId: string | null;
+  initialMitigatedTitles: string[];
 }) {
-  const [mitigatedTitles, setMitigatedTitles] = useState<string[]>([]);
+  const router = useRouter();
+  const [mitigatedTitles, setMitigatedTitles] = useState<string[]>(initialMitigatedTitles);
   const [celebration, setCelebration] = useState<CelebrationState | null>(null);
   const [pendingMitigation, setPendingMitigation] = useState<PendingMitigationState | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  const scoreLift = useMemo(
+  const currentLift = useMemo(
     () =>
       alerts.reduce((sum, alert) => {
         if (!mitigatedTitles.includes(alert.title)) {
@@ -57,26 +59,60 @@ export function AlertsMitigationBoard({
       }, 0),
     [alerts, mitigatedTitles],
   );
-  const liveSecurityScore = Math.min(100, baseSecurityScore + scoreLift);
+  const savedLift = useMemo(
+    () =>
+      alerts.reduce((sum, alert) => {
+        if (!initialMitigatedTitles.includes(alert.title)) {
+          return sum;
+        }
+
+        return sum + getMitigationBoost(alert.level);
+      }, 0),
+    [alerts, initialMitigatedTitles],
+  );
+  const scoreDelta = currentLift - savedLift;
+  const liveSecurityScore = Math.max(0, Math.min(100, baseSecurityScore + scoreDelta));
   const quickWinCount = alerts.filter(isEasyMitigation).length;
 
-  function finalizeMitigation(alert: AlertItem) {
-    setMitigatedTitles((current) => {
-      return [...current, alert.title];
+  async function persistMitigations(nextTitles: string[]) {
+    if (!assessmentId) {
+      return;
+    }
+
+    const response = await fetch("/api/assessment/mitigations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        assessmentId,
+        mitigatedAlertTitles: nextTitles,
+      }),
     });
 
-    const id = Date.now();
-    setCelebration({ id, alertTitle: alert.title });
-    window.setTimeout(() => {
-      setCelebration((current) => (current?.id === id ? null : current));
-    }, 1400);
+    const data = (await response.json()) as { error?: string };
+    if (!response.ok) {
+      throw new Error(data.error ?? "Failed to save mitigations.");
+    }
   }
 
-  function handleMitigationToggle(alert: AlertItem) {
+  async function handleMitigationToggle(alert: AlertItem) {
     const isMitigated = mitigatedTitles.includes(alert.title);
+    const nextTitles = isMitigated
+      ? mitigatedTitles.filter((title) => title !== alert.title)
+      : [...mitigatedTitles, alert.title];
+
+    setSaveError(null);
+    setMitigatedTitles(nextTitles);
 
     if (isMitigated) {
-      setMitigatedTitles((current) => current.filter((title) => title !== alert.title));
+      try {
+        await persistMitigations(nextTitles);
+        router.refresh();
+      } catch (error) {
+        setMitigatedTitles(mitigatedTitles);
+        setSaveError(error instanceof Error ? error.message : "Failed to save mitigations.");
+      }
       return;
     }
 
@@ -88,15 +124,27 @@ export function AlertsMitigationBoard({
       behavior: "smooth",
     });
 
-    window.setTimeout(() => {
+    window.setTimeout(async () => {
       setPendingMitigation((current) => {
         if (current?.id !== pendingId) {
           return current;
         }
 
-        finalizeMitigation(alert);
         return null;
       });
+
+      try {
+        await persistMitigations(nextTitles);
+        const id = Date.now();
+        setCelebration({ id, alertTitle: alert.title });
+        window.setTimeout(() => {
+          setCelebration((current) => (current?.id === id ? null : current));
+        }, 1400);
+        router.refresh();
+      } catch (error) {
+        setMitigatedTitles(mitigatedTitles);
+        setSaveError(error instanceof Error ? error.message : "Failed to save mitigations.");
+      }
     }, 700);
   }
 
@@ -129,7 +177,10 @@ export function AlertsMitigationBoard({
               <span className="text-5xl font-black text-white [font-family:var(--font-display)]">{liveSecurityScore}</span>
               <span className="pb-1 text-sm font-bold text-emerald-100">/100</span>
             </div>
-            <p className="mt-1 text-xs text-emerald-100/80">+{scoreLift} from mitigated quick wins</p>
+            <p className="mt-1 text-xs text-emerald-100/80">
+              {scoreDelta >= 0 ? "+" : ""}
+              {scoreDelta} from changes made on this page
+            </p>
           </motion.div>
         </div>
 
@@ -147,9 +198,15 @@ export function AlertsMitigationBoard({
             {quickWinCount} quick wins available
           </span>
           <span className="text-sm text-slate-300">
-            Tap the large green button on a card to immediately mark an easy fix as mitigated.
+            Tap the large green button on a card to save a mitigation and carry the updated score back to the dashboard.
           </span>
         </div>
+
+        {saveError ? (
+          <div className="mt-4 rounded-2xl border border-rose-300/15 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
+            {saveError}
+          </div>
+        ) : null}
 
         {pendingMitigation ? (
           <motion.div

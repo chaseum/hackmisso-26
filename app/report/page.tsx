@@ -34,7 +34,8 @@ export default async function ReportPage() {
   );
 
   const chatPayload = {
-    scorePercent: report?.scorePercent ?? 0,
+    securityScore: report?.securityScore ?? 0,
+    riskScorePercent: report?.riskScorePercent ?? 0,
     postureLabel: report?.postureLabel ?? "Needs attention",
     recommendations: report?.recommendations ?? [],
     vulnerabilities: report?.vulnerabilities ?? [],

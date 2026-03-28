@@ -3,7 +3,6 @@ import { BellRing } from "lucide-react";
 import { AlertsMitigationBoard } from "@/components/alerts-mitigation-board";
 import { NeuralSecHeader } from "@/components/neuralsec-header";
 import { SetupNotice } from "@/components/site";
-import { getSecurityScore } from "@/lib/assessment-report";
 import { getLatestAssessmentReportData } from "@/lib/assessment-report";
 import { createServerClientSafe, hasSupabaseEnv } from "@/lib/supabase";
 
@@ -21,7 +20,7 @@ export default async function AlertsPage() {
     data: { user },
   } = await supabase.auth.getUser();
   const report = user ? await getLatestAssessmentReportData() : null;
-  const baseSecurityScore = getSecurityScore(report?.scorePercent ?? 0);
+  const baseSecurityScore = report?.securityScore ?? 0;
 
   return (
     <div className="grid-bg relative flex min-h-screen flex-col bg-[#010409] text-slate-300">
@@ -49,7 +48,12 @@ export default async function AlertsPage() {
           </p>
         </section>
 
-        <AlertsMitigationBoard alerts={report?.alerts ?? []} baseSecurityScore={baseSecurityScore} />
+        <AlertsMitigationBoard
+          alerts={report?.alerts ?? []}
+          baseSecurityScore={baseSecurityScore}
+          assessmentId={report?.assessment?.id ?? null}
+          initialMitigatedTitles={report?.mitigatedAlertTitles ?? []}
+        />
 
         <div>
           <Link href="/report" className="text-sm font-bold text-cyan-400 transition-colors hover:text-cyan-300">

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ShieldAlert, Wrench } from "lucide-react";
+import { FormattedAiContent } from "@/components/formatted-ai-content";
 import { RecommendationBrowser } from "@/components/recommendation-browser";
 import { makeRiskSlug } from "@/lib/risk-links";
 import type { AssessmentRecommendation } from "@/types/database";
@@ -23,12 +24,71 @@ type FrameworkReference = {
   frameworkExcerpt: string;
 };
 
-function summarizeFrameworkExcerpt(excerpt: string) {
-  const normalized = excerpt.replace(/\s+/g, " ").trim();
-  const firstSentence = normalized.split(/(?<=[.!?])\s+/)[0] ?? normalized;
-  const candidate = firstSentence.length > 150 ? `${firstSentence.slice(0, 147).trimEnd()}...` : firstSentence;
+const SIMPLE_TERMINOLOGY_BY_REFERENCE: Record<string, string> = {
+  "CIS Control 1": [
+    "- What this means: Keep a current list of every company laptop, desktop, phone, and server.",
+    "- In plain language: If you do not know what is connected to your systems, you cannot protect it.",
+    "- Why it matters: Unknown devices create blind spots attackers can use without anyone noticing.",
+  ].join("\n"),
+  "ISO/IEC 27001 A.5.18": [
+    "- What this means: Remove access as soon as someone leaves the organization or changes roles.",
+    "- In plain language: Former staff and volunteers should not still be able to sign in.",
+    "- Why it matters: Old accounts are an easy way for the wrong person to get back into email, files, or business tools.",
+  ].join("\n"),
+  "CIS Control 6": [
+    "- What this means: Important accounts should require more than just a password to log in.",
+    "- In plain language: Turn on MFA for email, finance, and admin systems.",
+    "- Why it matters: If a password gets stolen, MFA can stop the attacker from getting in.",
+  ].join("\n"),
+  "CIS Control 7": [
+    "- What this means: Devices and software should get security updates quickly and consistently.",
+    "- In plain language: Do not leave computers, servers, browsers, or apps sitting unpatched.",
+    "- Why it matters: Attackers often break in through old bugs that already have a fix available.",
+  ].join("\n"),
+  "PR.AA-01": [
+    "- What this means: Only the people who truly need sensitive data should be able to access it.",
+    "- In plain language: Do not give everyone access to everything.",
+    "- Why it matters: If one account is compromised, limited access reduces how much damage can spread.",
+  ].join("\n"),
+  "CIS Control 5": [
+    "- What this means: Use strong, unique passwords and store them in a secure password manager.",
+    "- In plain language: Staff should not reuse passwords across work and personal accounts.",
+    "- Why it matters: One leaked password should not open the door to multiple company systems.",
+  ].join("\n"),
+  "PR.AT-01": [
+    "- What this means: Train people regularly so they can spot phishing, scams, and suspicious requests.",
+    "- In plain language: Employees need practice recognizing bad emails before they click.",
+    "- Why it matters: Human mistakes are one of the easiest ways attackers get inside.",
+  ].join("\n"),
+  "CIS Control 10": [
+    "- What this means: Every company device should have active malware protection running.",
+    "- In plain language: Laptops and desktops need up-to-date antivirus or endpoint protection.",
+    "- Why it matters: These tools help catch malicious files and suspicious behavior before it spreads.",
+  ].join("\n"),
+  "RS.RP-01": [
+    "- What this means: Have a written plan for what to do when something goes wrong.",
+    "- In plain language: The team should know who responds, what gets shut down, and who gets contacted first.",
+    "- Why it matters: A clear response plan saves time and reduces panic during a real incident.",
+  ].join("\n"),
+  "RC.RP-01": [
+    "- What this means: Back up important data in a separate place so you can recover after an attack or mistake.",
+    "- In plain language: Keep copies of key data where ransomware or accidental deletion cannot wipe everything out.",
+    "- Why it matters: Good backups can keep the organization operating instead of starting from scratch.",
+  ].join("\n"),
+};
 
-  return candidate || "Plain-English summary unavailable for this framework.";
+function summarizeFrameworkExcerpt(reference: string, excerpt: string) {
+  return SIMPLE_TERMINOLOGY_BY_REFERENCE[reference] ?? [
+    `- What this means: ${excerpt.replace(/\s+/g, " ").trim()}`,
+    "- In plain language: This control is asking the organization to put a basic security safeguard in place and keep using it consistently.",
+  ].join("\n");
+}
+
+function formatFrameworkExplanation(excerpt: string) {
+  return excerpt
+    .replace(/\s+/g, " ")
+    .replace(/([A-Z][A-Z ]+:\s*)/g, "\n\n$1")
+    .trim();
 }
 
 function priorityClass(priority?: "high" | "medium" | "low") {
@@ -109,13 +169,16 @@ export function ReportContentTabs({
                   </div>
                   <div className="rounded-2xl border border-cyan-500/10 bg-cyan-500/5 p-5">
                     <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-cyan-200">Simple terminology</p>
-                    <p className="mt-3 text-base leading-7 text-slate-100">{summarizeFrameworkExcerpt(framework.frameworkExcerpt)}</p>
+                    <FormattedAiContent
+                      content={summarizeFrameworkExcerpt(framework.frameworkReference, framework.frameworkExcerpt)}
+                      className="mt-3 space-y-3 text-base text-slate-100"
+                    />
                   </div>
                   <details className="mt-5 rounded-2xl border border-white/5 bg-[#020912] px-5 py-4 text-slate-300">
                     <summary className="cursor-pointer text-sm font-bold uppercase tracking-[0.18em] text-slate-200">
                       Full framework explanation
                     </summary>
-                    <p className="mt-4 text-sm leading-7 text-slate-400">{framework.frameworkExcerpt}</p>
+                    <FormattedAiContent content={formatFrameworkExplanation(framework.frameworkExcerpt)} className="mt-4 space-y-3 text-sm text-slate-400" />
                   </details>
                 </article>
               ))}
@@ -153,7 +216,7 @@ export function ReportContentTabs({
                   </div>
                   {item.actionableFix ? (
                     <div className="mt-5 rounded-2xl border border-cyan-500/10 bg-cyan-500/5 p-5 text-lg leading-8 text-slate-200">
-                      {item.actionableFix}
+                      <FormattedAiContent content={item.actionableFix} className="space-y-3" />
                     </div>
                   ) : null}
                 </article>

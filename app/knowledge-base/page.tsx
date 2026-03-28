@@ -45,7 +45,8 @@ export default async function KnowledgeBasePage() {
   const vulnerabilities = report?.vulnerabilities ?? [];
   const hasAssessment = Boolean(report?.assessment);
   const chatPayload = {
-    scorePercent: report?.scorePercent ?? 0,
+    securityScore: report?.securityScore ?? 0,
+    riskScorePercent: report?.riskScorePercent ?? 0,
     postureLabel: report?.postureLabel ?? "Needs attention",
     recommendations: report?.recommendations ?? [],
     vulnerabilities: report?.vulnerabilities ?? [],

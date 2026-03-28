@@ -32,20 +32,20 @@ function formatAssessmentTimestamp(createdAt: string) {
   }).format(new Date(createdAt));
 }
 
-function getGaugeOffset(scorePercent: number) {
+function getGaugeOffset(securityScore: number) {
   const circumference = 283;
-  return Number((circumference * (1 - scorePercent / 100)).toFixed(2));
+  return Number((circumference * (1 - securityScore / 100)).toFixed(2));
 }
 
-function getPostureAccent(scorePercent: number) {
-  if (scorePercent <= 20) return "border-cyan-500/20 bg-cyan-500/10 text-cyan-400";
-  if (scorePercent <= 40) return "border-yellow-500/20 bg-yellow-500/10 text-yellow-400";
+function getPostureAccent(securityScore: number) {
+  if (securityScore >= 80) return "border-cyan-500/20 bg-cyan-500/10 text-cyan-400";
+  if (securityScore >= 60) return "border-yellow-500/20 bg-yellow-500/10 text-yellow-400";
   return "border-rose-500/20 bg-rose-500/10 text-rose-300";
 }
 
-function getGaugeStroke(scorePercent: number) {
-  if (scorePercent <= 20) return "#22d3ee";
-  if (scorePercent <= 40) return "#fbbf24";
+function getGaugeStroke(securityScore: number) {
+  if (securityScore >= 80) return "#22d3ee";
+  if (securityScore >= 60) return "#fbbf24";
   return "#fb7185";
 }
 
@@ -68,9 +68,10 @@ export default async function DashboardPage() {
         : "there";
   const assessment = report?.assessment ?? null;
   const vulnerabilities = report?.vulnerabilities ?? [];
-  const scorePercent = report?.scorePercent ?? 0;
+  const securityScore = report?.securityScore ?? 0;
+  const riskScorePercent = report?.riskScorePercent ?? 0;
   const postureLabel = report?.postureLabel ?? "Needs attention";
-  const postureAccent = getPostureAccent(scorePercent);
+  const postureAccent = getPostureAccent(securityScore);
   const orgName = report?.orgName ?? "your organization";
   const hasAssessment = Boolean(assessment);
   const metricCards: MetricCard[] = [
@@ -100,9 +101,10 @@ export default async function DashboardPage() {
       valueClassName: "pt-2 text-sm font-medium",
     },
   ];
-  const gaugeOffset = getGaugeOffset(scorePercent);
+  const gaugeOffset = getGaugeOffset(securityScore);
   const chatPayload = {
-    scorePercent: report?.scorePercent ?? 0,
+    securityScore: report?.securityScore ?? 0,
+    riskScorePercent: report?.riskScorePercent ?? 0,
     postureLabel: report?.postureLabel ?? "Needs attention",
     recommendations: report?.recommendations ?? [],
     vulnerabilities: report?.vulnerabilities ?? [],
@@ -177,7 +179,7 @@ export default async function DashboardPage() {
                     cy="50"
                     r="45"
                     fill="none"
-                    stroke={getGaugeStroke(scorePercent)}
+                    stroke={getGaugeStroke(securityScore)}
                     strokeWidth="8"
                     className="gauge-path"
                     style={{ ["--gauge-offset" as string]: gaugeOffset }}
@@ -185,10 +187,10 @@ export default async function DashboardPage() {
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="text-8xl font-extrabold tracking-tighter text-white [font-family:var(--font-display)]">
-                    {scorePercent}
+                    {securityScore}
                   </span>
                   <span className="mt-1 text-sm font-bold uppercase tracking-widest text-slate-300 [font-family:var(--font-mono)]">
-                    Risk score
+                    Security score
                   </span>
                 </div>
               </div>
@@ -196,12 +198,13 @@ export default async function DashboardPage() {
                 <span className={`rounded-full border px-5 py-2 text-sm font-bold uppercase tracking-widest ${postureAccent}`}>
                   {postureLabel}
                 </span>
+                <p className="mt-4 text-sm text-slate-400">Current risk exposure: {riskScorePercent}/100</p>
               </div>
             </section>
           </div>
 
           <aside className="fade-up col-span-12 flex flex-col gap-6 lg:col-span-5" style={{ animationDelay: "0.2s" }}>
-            <DashboardSecurityData metrics={metricCards} scorePercent={scorePercent} vulnerabilities={vulnerabilities} />
+            <DashboardSecurityData metrics={metricCards} scorePercent={securityScore} vulnerabilities={vulnerabilities} />
           </aside>
         </div>
 

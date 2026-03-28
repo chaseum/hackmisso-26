@@ -71,6 +71,7 @@ export type AssessmentRow = {
   raw_responses: AssessmentResponse[];
   failed_question_ids: string[];
   ai_recommendations: string;
+  mitigated_alert_titles: string[];
   org_profile: OrgProfile;
   created_at: string;
 };
@@ -82,5 +83,6 @@ export type InsertAssessmentInput = {
   raw_responses: AssessmentResponse[];
   failed_question_ids: string[];
   ai_recommendations: string;
+  mitigated_alert_titles?: string[];
   org_profile: OrgProfile;
 };

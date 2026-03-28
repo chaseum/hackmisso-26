@@ -11,10 +11,30 @@ type JsonValue =
 type FollowUpRequestBody = {
   userPrompt?: unknown;
   assessmentResults?: unknown;
+  conversationHistory?: unknown;
+};
+
+type ChatMessage = {
+  role: "assistant" | "user";
+  content: string;
 };
 
 function isJsonObject(value: unknown): value is { [key: string]: JsonValue } {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function isConversationHistory(value: unknown): value is ChatMessage[] {
+  return Array.isArray(value) && value.every((item) => {
+    if (!item || typeof item !== "object") {
+      return false;
+    }
+
+    const candidate = item as Record<string, unknown>;
+    return (
+      (candidate.role === "assistant" || candidate.role === "user") &&
+      typeof candidate.content === "string"
+    );
+  });
 }
 
 export async function POST(request: Request) {
@@ -22,6 +42,7 @@ export async function POST(request: Request) {
     const body = (await request.json()) as FollowUpRequestBody;
     const userPrompt = body.userPrompt;
     const assessmentResults = body.assessmentResults;
+    const conversationHistory = isConversationHistory(body.conversationHistory) ? body.conversationHistory.slice(-6) : [];
 
     if (typeof userPrompt !== "string" || userPrompt.trim().length === 0) {
       return NextResponse.json({ error: "Request must include a non-empty `userPrompt`." }, { status: 400 });
@@ -48,8 +69,23 @@ export async function POST(request: Request) {
         messages: [
           {
             role: "system",
-            content: `You are a cybersecurity expert consulting a small business. You are reviewing their recent risk assessment results: ${JSON.stringify(assessmentResults)}. The user will ask a specific follow-up question. Answer strictly from the provided assessment data. Keep the response concise, direct, and practical. Use at most 90 words. Prefer 2 to 4 short bullet points or 2 very short paragraphs. Avoid filler, disclaimers, and repeated context. Use plain language and mention the specific fix or tool when the assessment supports it.`,
+            content: `You are a cybersecurity expert consulting a small organization. You are reviewing their recent assessment results: ${JSON.stringify(assessmentResults)}.
+
+Answer the user's next question using the assessment data and recent conversation context only.
+
+Response rules:
+- Keep the answer concise, direct, and practical.
+- Use plain language for non-experts.
+- Prefer short paragraphs or simple bullet points.
+- Avoid markdown headings, code fences, and decorative asterisks.
+- If you mention a fix, include the first realistic step to take.
+- When relevant, refer to the specific vulnerability or framework reference from the assessment.
+- Keep the answer under 140 words.`,
           },
+          ...conversationHistory.map((message) => ({
+            role: message.role,
+            content: message.content,
+          })),
           {
             role: "user",
             content: userPrompt,

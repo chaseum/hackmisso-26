@@ -17,14 +17,14 @@ function getGaugeOffset(scorePercent: number) {
 }
 
 function getRiskTone(scorePercent: number) {
-  if (scorePercent <= 20) {
+  if (scorePercent >= 80) {
     return {
       bar: "bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]",
       text: "text-cyan-300",
     };
   }
 
-  if (scorePercent <= 40) {
+  if (scorePercent >= 60) {
     return {
       bar: "bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.45)]",
       text: "text-amber-300",
@@ -85,7 +85,7 @@ export function KnowledgeBasePosturePanel({
               <span className="text-5xl font-extrabold tracking-tighter text-white [font-family:var(--font-display)]">
                 {scorePercent}
               </span>
-              <span className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Risk Meter</span>
+              <span className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Security Score</span>
             </div>
           </div>
 
@@ -96,7 +96,7 @@ export function KnowledgeBasePosturePanel({
 
           <div className="mt-5 w-full max-w-[13rem]">
             <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-[0.18em] text-slate-500">
-              <span>Current risk score</span>
+              <span>Current security score</span>
               <span className={riskTone.text}>{scorePercent}/100</span>
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-white/5">

@@ -79,6 +79,8 @@ npm run dev
 4. Open the SQL editor and run the migrations in order:
    - [supabase/migrations/202603271300_initial_schema.sql](/Users/chase/code/hackmisso-26/supabase/migrations/202603271300_initial_schema.sql)
    - [supabase/migrations/202603271830_assessment_schema.sql](/Users/chase/code/hackmisso-26/supabase/migrations/202603271830_assessment_schema.sql)
+   - [supabase/migrations/202603271945_add_org_profile_to_assessments.sql](/Users/chase/code/hackmisso-26/supabase/migrations/202603271945_add_org_profile_to_assessments.sql)
+   - [supabase/migrations/202603281030_add_mitigated_alert_titles.sql](/Users/chase/code/hackmisso-26/supabase/migrations/202603281030_add_mitigated_alert_titles.sql)
 5. Optional:
    - update the UUID in [supabase/seed.sql](/Users/chase/code/hackmisso-26/supabase/seed.sql) and run it for demo project data
    - run [supabase/questions.sql](/Users/chase/code/hackmisso-26/supabase/questions.sql) to create or refresh the assessment question set manually
@@ -133,6 +135,8 @@ Run:
 
 - [supabase/migrations/202603271300_initial_schema.sql](/Users/chase/code/hackmisso-26/supabase/migrations/202603271300_initial_schema.sql)
 - [supabase/migrations/202603271830_assessment_schema.sql](/Users/chase/code/hackmisso-26/supabase/migrations/202603271830_assessment_schema.sql)
+- [supabase/migrations/202603271945_add_org_profile_to_assessments.sql](/Users/chase/code/hackmisso-26/supabase/migrations/202603271945_add_org_profile_to_assessments.sql)
+- [supabase/migrations/202603281030_add_mitigated_alert_titles.sql](/Users/chase/code/hackmisso-26/supabase/migrations/202603281030_add_mitigated_alert_titles.sql)
 
 Optional:
 
