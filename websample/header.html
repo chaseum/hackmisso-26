@@ -1,0 +1,12 @@
+{
+  "name": "Header",
+  "description": "Site header with navigation and branding",
+  "defaultProps": {
+    "activeItem": "dashboard",
+    "dashboardHref": "#dashboard",
+    "resourcesHref": "#resources",
+    "missionHref": "#mission",
+    "ctaHref": "#get-started"
+  },
+  "htmlContent": "<header class=\"w-full px-8 py-6 flex justify-between items-center z-50 bg-[#010409]/60 backdrop-blur-xl border-b border-white/5\">\n  <div class=\"flex items-center gap-3\">\n    <div class=\"w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/40 flex items-center justify-center shadow-[0_0_15px_rgba(6,182,212,0.2)]\">\n      <iconify-icon icon=\"lucide:shield-check\" class=\"text-cyan-400 text-2xl\"></iconify-icon>\n    </div>\n    <span class=\"text-xl font-bold tracking-tight text-white font-['Cabinet_Grotesk']\">NEURAL<span class=\"text-cyan-400\">SEC_</span></span>\n  </div>\n  \n  <nav class=\"hidden md:flex items-center gap-10\">\n    <a :href=\"dashboardHref\" \n       class=\"text-[11px] font-bold tracking-[0.2em] uppercase transition-colors\" \n       :class=\"activeItem === 'dashboard' ? 'text-white' : 'text-slate-400 hover:text-white'\">\n      System_Dashboard\n    </a>\n    <a :href=\"resourcesHref\" \n       class=\"text-[11px] font-bold tracking-[0.2em] uppercase transition-colors\" \n       :class=\"activeItem === 'resources' ? 'text-white' : 'text-slate-400 hover:text-white'\">\n      Knowledge_Base\n    </a>\n    <a :href=\"missionHref\" \n       class=\"text-[11px] font-bold tracking-[0.2em] uppercase transition-colors\" \n       :class=\"activeItem === 'mission' ? 'text-white' : 'text-slate-400 hover:text-white'\">\n      Security_Mission\n    </a>\n  </nav>\n\n  <div>\n    <a :href=\"ctaHref\" \n       class=\"px-8 py-3 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold uppercase tracking-widest rounded-full transition-all shadow-[0_0_20px_rgba(8,145,178,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)]\">\n      Initialize_Assessment\n    </a>\n  </div>\n</header>"
+}
