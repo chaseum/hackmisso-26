@@ -111,6 +111,25 @@ function formatRecommendationsAsMarkdown(recommendations: AssessmentRecommendati
   ].join("\n\n");
 }
 
+function buildFallbackRecommendations(failedQuestions: FailedQuestionContext[]): AssessmentRecommendation[] {
+  if (failedQuestions.length === 0) {
+    return [
+      {
+        title: "No failed controls detected",
+        summary: "All submitted answers were marked compliant, so no remediation steps were generated.",
+        priority: "low",
+      },
+    ];
+  }
+
+  return failedQuestions.slice(0, 5).map((question) => ({
+    title: `Review ${question.frameworkReference}`,
+    summary: `Address "${question.questionText}" based on the referenced control and prioritize it according to the current risk score.`,
+    framework_reference: question.frameworkReference,
+    priority: question.priorityScore >= 3 ? "high" : "medium",
+  }));
+}
+
 async function generateRecommendations(failedQuestions: FailedQuestionContext[]) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -238,16 +257,18 @@ export async function POST(request: Request) {
     const scorePercent = maxPossibleScore === 0 ? 0 : Number(((totalScore / maxPossibleScore) * 100).toFixed(2));
     const highPriorityFlags = failedQuestions.filter((question) => question.priorityScore >= 3).length;
 
-    const recommendations =
-      failedQuestions.length === 0
-        ? ([
-            {
-              title: "No failed controls detected",
-              summary: "All submitted answers were marked compliant, so no remediation steps were generated.",
-              priority: "low",
-            },
-          ] satisfies AssessmentRecommendation[])
-        : await generateRecommendations(failedQuestions);
+    let recommendations: AssessmentRecommendation[];
+
+    if (failedQuestions.length === 0) {
+      recommendations = buildFallbackRecommendations([]);
+    } else {
+      try {
+        recommendations = await generateRecommendations(failedQuestions);
+      } catch (error) {
+        console.error("Falling back after OpenAI recommendation failure:", error);
+        recommendations = buildFallbackRecommendations(failedQuestions);
+      }
+    }
     const recommendationsMarkdown = formatRecommendationsAsMarkdown(recommendations);
 
     const assessment = await insertCompletedAssessment({

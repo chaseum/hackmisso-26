@@ -18,6 +18,7 @@ export function Navbar({ user }: { user: User | null }) {
         </Link>
         <nav className="flex items-center gap-2">
           <Button asChild variant="ghost" size="sm"><Link href="/">Home</Link></Button>
+          <Button asChild variant="ghost" size="sm"><Link href="/test-harness">Test Harness</Link></Button>
           {user ? (
             <>
               <Button asChild variant="ghost" size="sm"><Link href="/dashboard">Dashboard</Link></Button>
