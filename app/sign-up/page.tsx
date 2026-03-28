@@ -50,10 +50,10 @@ export default function SignUpPage() {
           <div className="space-y-8">
             <div className="space-y-4">
               <h1 className="text-4xl font-extrabold uppercase leading-tight tracking-tight text-white md:text-5xl [font-family:var(--font-display)]">
-                Set up your <span className="text-cyan-400">organization</span>
+                Create your <span className="text-cyan-400">account</span>
               </h1>
               <p className="text-xl font-medium leading-relaxed text-slate-300">
-                Join 500+ nonprofits and student organizations securing their digital assets with SeKeyity&apos;s automated assessment core.
+                Create your login first. We&apos;ll capture organization name, type, and size in the next step before the assessment starts.
               </p>
             </div>
 
@@ -91,7 +91,7 @@ export default function SignUpPage() {
 
             <div className="mb-8 flex items-center justify-between">
               <span className="text-[10px] font-bold uppercase tracking-widest text-cyan-400 [font-family:var(--font-mono)]">
-                Step 1: Organization details
+                Step 1: Account setup
               </span>
               <span className="text-[10px] uppercase tracking-widest text-slate-500 [font-family:var(--font-mono)]">
                 33% Complete

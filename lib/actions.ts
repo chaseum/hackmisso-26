@@ -21,17 +21,14 @@ export async function authenticateWithPassword(mode: "sign-in" | "sign-up", _pre
   const supabase = await createServerClient();
   if (mode === "sign-up") {
     const fullName = String(formData.get("full_name") || "").trim();
-    const teamName = String(formData.get("team_name") || "").trim();
-    const orgFocus = String(formData.get("org_focus") || "").trim();
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName, team_name: teamName, org_focus: orgFocus } },
+      options: { data: { full_name: fullName } },
     });
     if (error) return { error: error.message, success: "" };
     revalidatePath("/", "layout");
-    const nextPath = teamName ? `/prequestionnaire?orgName=${encodeURIComponent(teamName)}` : "/prequestionnaire";
-    redirect(nextPath);
+    redirect("/prequestionnaire");
   }
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });

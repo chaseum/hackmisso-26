@@ -81,16 +81,10 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
         <Input id="password" name="password" type="password" autoComplete={mode === "sign-in" ? "current-password" : "new-password"} placeholder="••••••••" minLength={8} required />
       </div>
       {mode === "sign-up" ? (
-        <>
-          <div className="space-y-2">
-            <Label htmlFor="full_name">Full name</Label>
-            <Input id="full_name" name="full_name" placeholder="John Doe" required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="team_name">Team name</Label>
-            <Input id="team_name" name="team_name" placeholder="Example Organization" />
-          </div>
-        </>
+        <div className="space-y-2">
+          <Label htmlFor="full_name">Full name</Label>
+          <Input id="full_name" name="full_name" placeholder="John Doe" required />
+        </div>
       ) : null}
       {state.error ? <p className="text-sm text-rose-600">{state.error}</p> : null}
       {state.success ? <p className="text-sm text-emerald-700">{state.success}</p> : null}

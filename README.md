@@ -14,6 +14,7 @@ Production-quality starter for hackathons, case competitions, and pitch demos us
 
 - Responsive landing page with a polished marketing feel
 - Supabase email/password auth
+- Sign-up creates the account first, then redirects to a pre-questionnaire for organization name, type, and size
 - Protected dashboard route with session-aware navbar
 - Barebones `/test-harness` client page for end-to-end cyber assessment testing
 - Minimal project/profile/notes data model with RLS

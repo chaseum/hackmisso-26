@@ -14,12 +14,15 @@ import {
 import { LiquidGlassButton } from "@/components/motion-ui";
 import { NeuralSecHeader } from "@/components/neuralsec-header";
 import { authenticateWithPassword } from "@/lib/actions";
+import { createBrowserSupabaseClient, hasSupabaseBrowserEnv } from "@/lib/supabase-browser";
 
 type HeroState = "idle" | "locked" | "auth";
+type AssessmentStatus = "idle" | "missing" | "complete";
 const initialAuthState = { error: "", success: "" };
 
 export default function HomePage() {
   const [heroState, setHeroState] = useState<HeroState>("idle");
+  const [assessmentStatus, setAssessmentStatus] = useState<AssessmentStatus>("idle");
   const engageTimerRef = useRef<number | null>(null);
   const authTimerRef = useRef<number | null>(null);
   const titleStageRef = useRef<HTMLDivElement | null>(null);
@@ -34,6 +37,45 @@ export default function HomePage() {
       if (authTimerRef.current) {
         window.clearTimeout(authTimerRef.current);
       }
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadAssessmentStatus() {
+      if (!hasSupabaseBrowserEnv()) {
+        return;
+      }
+
+      const supabase = createBrowserSupabaseClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user || !isMounted) {
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("assessments")
+        .select("id")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!isMounted || error) {
+        return;
+      }
+
+      setAssessmentStatus(data ? "complete" : "missing");
+    }
+
+    void loadAssessmentStatus();
+
+    return () => {
+      isMounted = false;
     };
   }, []);
 
@@ -126,6 +168,23 @@ export default function HomePage() {
       />
 
       <section className="relative z-20 flex min-h-[calc(100vh-89px)] flex-col">
+        {assessmentStatus === "missing" ? (
+          <div className="mx-auto mt-6 w-full max-w-6xl px-4">
+            <div className="rounded-[1.75rem] border border-amber-300/20 bg-amber-300/10 px-6 py-5 text-amber-100 shadow-[0_12px_30px_rgba(0,0,0,0.14)]">
+              <p className="text-xs font-extrabold uppercase tracking-[0.35em] text-amber-200">Assessment Status</p>
+              <p className="mt-3 text-base leading-7">
+                Assessment not completed. Complete the assessment to see your score and recommendations.
+              </p>
+              <Link
+                href="/prequestionnaire"
+                className="mt-4 inline-flex rounded-xl border border-amber-200/30 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-white transition hover:bg-white/10"
+              >
+                Complete Assessment
+              </Link>
+            </div>
+          </div>
+        ) : null}
+
         <div
           className={`homepage-zoom flex flex-1 flex-col items-center justify-center px-4 ${isZoomed ? "homepage-zoomed" : ""}`}
         >
@@ -147,7 +206,6 @@ export default function HomePage() {
               Enhance your organization&apos;s future digital security
             </p>
             <p className="mt-4 text-[11px] uppercase tracking-[0.28em] text-slate-500 [font-family:var(--font-mono)]">
-              Move your cursor across the title
             </p>
           </div>
 
