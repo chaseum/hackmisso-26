@@ -11,6 +11,7 @@ import {
   Terminal,
   Unlock,
 } from "lucide-react";
+import { LiquidGlassButton } from "@/components/motion-ui";
 import { NeuralSecHeader } from "@/components/neuralsec-header";
 import { authenticateWithPassword } from "@/lib/actions";
 
@@ -296,16 +297,16 @@ export default function HomePage() {
               {authState.error ? <p className="text-sm text-rose-400">{authState.error}</p> : null}
 
               <div className="grid gap-3 sm:grid-cols-2">
-                <button
+                <LiquidGlassButton
                   type="submit"
                   disabled={pending}
-                  className="tactile-button flex items-center justify-center gap-3 rounded-2xl bg-cyan-600 py-4 text-center text-xs font-bold uppercase tracking-[0.2em] text-white shadow-[0_0_25px_rgba(8,145,178,0.2)] hover:bg-cyan-500 disabled:cursor-not-allowed disabled:opacity-70"
+                  className="w-full justify-center rounded-2xl py-4 text-center text-xs font-bold uppercase tracking-[0.2em] disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   <Terminal className="h-4 w-4" />
                   <span className={pending ? "text-[10px] tracking-[0.16em]" : undefined}>
                     {pending ? "Authenticating" : "Login"}
                   </span>
-                </button>
+                </LiquidGlassButton>
                 <Link
                   href="/sign-up"
                   className="flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 py-4 text-center text-xs font-bold uppercase tracking-[0.2em] text-white transition-all hover:bg-white/10"

@@ -1,4 +1,4 @@
-# NeuralSec - Design System & Components
+# Sekeyity - Design System & Components
 
 ## Color Palette
 

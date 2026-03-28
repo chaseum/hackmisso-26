@@ -5,6 +5,7 @@ import type { createServerClient } from "@/lib/supabase";
 import { formatDateTime } from "@/lib/utils";
 import type { NoteRow, ProfileRow, ProjectRow } from "@/types/database";
 import { SubmitButton } from "@/components/client";
+import { TiltCard } from "@/components/motion-ui";
 import { Badge, Card, Container, EmptyState, Input, Label, SectionHeader, Textarea } from "@/components/ui";
 
 type DashboardSupabaseClient = Awaited<ReturnType<typeof createServerClient>>;
@@ -41,7 +42,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     <main className="py-8 sm:py-10">
       <Container>
         <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
-          <Card className="h-fit p-4 lg:sticky lg:top-24">
+          <TiltCard className="h-fit p-4 lg:sticky lg:top-24">
             <div className="mb-4 px-3 pt-2">
               <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Workspace</p>
               <p className="mt-2 text-lg font-semibold text-slate-950">Demo control room</p>
@@ -52,7 +53,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 return <Link key={link.label} href={link.href} className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-950"><Icon className="size-4" />{link.label}</Link>;
               })}
             </nav>
-          </Card>
+          </TiltCard>
           <div>{children}</div>
         </div>
       </Container>
@@ -62,7 +63,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
 export function DashboardIntro({ profile, project }: { profile: ProfileRow | null; project: ProjectRow | null }) {
   return (
-    <Card className="overflow-hidden border-white/50 bg-[linear-gradient(135deg,rgba(15,118,110,0.1),rgba(255,255,255,0.9))] p-6 sm:p-8">
+    <TiltCard className="overflow-hidden border-white/50 bg-[linear-gradient(135deg,rgba(15,118,110,0.1),rgba(255,255,255,0.9))] p-6 sm:p-8">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <div className="space-y-4">
           <Badge>Dashboard</Badge>
@@ -76,7 +77,7 @@ export function DashboardIntro({ profile, project }: { profile: ProfileRow | nul
           <div><p className="text-xs uppercase tracking-[0.18em] text-slate-400">Stage</p><p className="mt-2 text-sm font-medium text-slate-700">{project?.stage ?? "Discovery"}</p></div>
         </div>
       </div>
-    </Card>
+    </TiltCard>
   );
 }
 
@@ -87,7 +88,7 @@ export function DashboardStats({ notesCount, hasProject }: { notesCount: number;
     { label: "Demo readiness", value: hasProject ? "Pitchable" : "Set up", icon: Gauge },
   ];
 
-  return <div className="grid gap-4 md:grid-cols-3">{stats.map((item) => { const Icon = item.icon; return <Card key={item.label} className="p-5"><div className="flex items-center justify-between"><div><p className="text-sm text-slate-500">{item.label}</p><p className="mt-2 text-2xl font-semibold text-slate-950">{item.value}</p></div><div className="flex size-11 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]"><Icon className="size-5" /></div></div></Card>; })}</div>;
+  return <div className="grid gap-4 md:grid-cols-3">{stats.map((item) => { const Icon = item.icon; return <TiltCard key={item.label} className="p-5"><div className="flex items-center justify-between"><div><p className="text-sm text-slate-500">{item.label}</p><p className="mt-2 text-2xl font-semibold text-slate-950">{item.value}</p></div><div className="flex size-11 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]"><Icon className="size-5" /></div></div></TiltCard>; })}</div>;
 }
 
 export function ProjectOverviewCard({ project }: { project: ProjectRow | null }) {

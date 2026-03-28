@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Copy, Loader2, Sparkles } from "lucide-react";
 import { FormattedAiContent } from "@/components/formatted-ai-content";
+import { StaggeredFeed } from "@/components/motion-ui";
 import type { AssessmentRecommendation } from "@/types/database";
 
 const TIMEFRAME_CONFIG = [
@@ -304,33 +305,35 @@ export function RecommendationBrowser({ recommendations }: { recommendations: As
       <div className="grid gap-6 lg:grid-cols-[340px_minmax(0,1fr)]">
         <div className="space-y-4">
           {activeRecommendations.length > 0 ? (
-            activeRecommendations.map((recommendation, index) => (
-              <motion.button
-                key={`${activeTimeframe}-${recommendation.framework_reference ?? recommendation.title}-${recommendation.title}`}
-                type="button"
-                whileTap={{ scale: 0.98 }}
-                onClick={() =>
-                  setActiveIndices((current) => ({
-                    ...current,
-                    [activeTimeframe]: index,
-                  }))
-                }
-                className={`w-full rounded-[1.25rem] border p-5 text-left transition-colors ${
-                  recommendation === activeRecommendation
-                    ? "border-cyan-500/30 bg-cyan-500/10"
-                    : "border-white/5 bg-white/[0.03] hover:border-cyan-500/20"
-                }`}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-base font-semibold text-white">{recommendation.title}</p>
-                  <span
-                    className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] ${priorityClass(recommendation.priority)}`}
-                  >
-                    {recommendation.priority ?? "low"}
-                  </span>
-                </div>
-              </motion.button>
-            ))
+            <StaggeredFeed className="space-y-4">
+              {activeRecommendations.map((recommendation, index) => (
+                <motion.button
+                  key={`${activeTimeframe}-${recommendation.framework_reference ?? recommendation.title}-${recommendation.title}`}
+                  type="button"
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() =>
+                    setActiveIndices((current) => ({
+                      ...current,
+                      [activeTimeframe]: index,
+                    }))
+                  }
+                  className={`w-full rounded-[1.25rem] border p-5 text-left transition-colors ${
+                    recommendation === activeRecommendation
+                      ? "border-cyan-500/30 bg-cyan-500/10"
+                      : "border-white/5 bg-white/[0.03] hover:border-cyan-500/20"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-base font-semibold text-white">{recommendation.title}</p>
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] ${priorityClass(recommendation.priority)}`}
+                    >
+                      {recommendation.priority ?? "low"}
+                    </span>
+                  </div>
+                </motion.button>
+              ))}
+            </StaggeredFeed>
           ) : (
             <div className="rounded-[1.25rem] border border-dashed border-white/10 bg-white/[0.03] p-6 text-base leading-7 text-slate-400">
               No recommendations are currently grouped into this timeframe. Switch tabs to review the rest of the remediation guide.

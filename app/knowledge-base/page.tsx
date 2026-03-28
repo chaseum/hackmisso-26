@@ -3,6 +3,7 @@ import { AlertTriangle, CheckCircle2, ShieldAlert } from "lucide-react";
 import { NeuralSecHeader } from "@/components/neuralsec-header";
 import { ReportActionAssistantModal } from "@/components/report-action-assistant-modal";
 import { SetupNotice } from "@/components/site";
+import { TypewriterHeading } from "@/components/typewriter-heading";
 import { getLatestAssessmentReportData } from "@/lib/assessment-report";
 import { makeRiskHref } from "@/lib/risk-links";
 import { createServerClientSafe } from "@/lib/supabase";
@@ -69,9 +70,11 @@ export default async function KnowledgeBasePage() {
           <div className="text-xs font-bold uppercase tracking-[0.32em] text-cyan-300 [font-family:var(--font-mono)]">
             Active Vulnerabilities
           </div>
-          <h1 className="mt-4 text-6xl font-bold tracking-tight text-white [font-family:var(--font-display)] md:text-7xl xl:text-[5.75rem]">
-            Let&apos;s find the gaps.
-          </h1>
+          <TypewriterHeading
+            text={"Let's find the gaps."}
+            speed={64}
+            className="mt-4 text-6xl font-bold tracking-tight text-white [font-family:var(--font-display)] md:text-7xl xl:text-[5.75rem]"
+          />
           <p className="mt-4 max-w-4xl text-xl leading-9 text-slate-300 md:text-2xl">
             This screen is for investigation. Review the alert cards, inspect the failed controls, and then move to the AI action assistant when you are ready to act.
           </p>

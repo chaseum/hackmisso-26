@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { CheckCircle2, Sparkles, Trophy } from "lucide-react";
+import { StaggeredFeed } from "@/components/motion-ui";
 import { getMitigationBoost } from "@/lib/mitigations";
 import { makeRiskHref } from "@/lib/risk-links";
 
@@ -264,76 +265,78 @@ export function AlertsMitigationBoard({
 
       <section className="space-y-4">
         {alerts.length > 0 ? (
-          alerts.map((alert) => {
-            const easyMitigation = isEasyMitigation(alert);
-            const isMitigated = mitigatedTitles.includes(alert.title);
-            const isPending = pendingMitigation?.alertTitle === alert.title;
+          <StaggeredFeed className="space-y-4">
+            {alerts.map((alert) => {
+              const easyMitigation = isEasyMitigation(alert);
+              const isMitigated = mitigatedTitles.includes(alert.title);
+              const isPending = pendingMitigation?.alertTitle === alert.title;
 
-            return (
-              <motion.article
-                key={`${alert.level}-${alert.title}`}
-                layout
-                className={`card-glass rounded-[1.5rem] p-5 transition-colors ${
-                  isMitigated ? "border-emerald-300/20 bg-emerald-400/[0.06]" : ""
-                }`}
-              >
-                <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <span className={`rounded px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] ${alert.levelClassName}`}>
-                      {alert.level}
-                    </span>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
-                      {alert.frameworkReference ?? "Assessment"}
-                    </span>
-                  </div>
-                  <Link
-                    href={makeRiskHref({ frameworkReference: alert.frameworkReference, title: alert.title })}
-                    className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-300 transition-colors hover:text-cyan-200"
-                  >
-                    Open detail
-                  </Link>
-                </div>
-
-                <h3 className="text-base font-semibold text-white">{alert.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-300">{alert.description}</p>
-
-                {easyMitigation ? (
-                  <div className="mt-5 rounded-2xl border border-emerald-300/15 bg-emerald-400/[0.05] p-4">
-                    <div className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-200">
-                      <Sparkles className="h-4 w-4" />
-                      Quick Win
+              return (
+                <motion.article
+                  key={`${alert.level}-${alert.title}`}
+                  layout
+                  className={`card-glass rounded-[1.5rem] p-5 transition-colors ${
+                    isMitigated ? "border-emerald-300/20 bg-emerald-400/[0.06]" : ""
+                  }`}
+                >
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <span className={`rounded px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] ${alert.levelClassName}`}>
+                        {alert.level}
+                      </span>
+                      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                        {alert.frameworkReference ?? "Assessment"}
+                      </span>
                     </div>
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-white">This is an easy mitigation action</p>
-                        <p className="mt-1 text-xs text-slate-300">
-                          Marking it complete applies a {getMitigationBoost(alert.level)} point security score lift.
-                        </p>
+                    <Link
+                      href={makeRiskHref({ frameworkReference: alert.frameworkReference, title: alert.title })}
+                      className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-300 transition-colors hover:text-cyan-200"
+                    >
+                      Open detail
+                    </Link>
+                  </div>
+
+                  <h3 className="text-base font-semibold text-white">{alert.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-300">{alert.description}</p>
+
+                  {easyMitigation ? (
+                    <div className="mt-5 rounded-2xl border border-emerald-300/15 bg-emerald-400/[0.05] p-4">
+                      <div className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-200">
+                        <Sparkles className="h-4 w-4" />
+                        Quick Win
                       </div>
-                      <button
-                        type="button"
-                        aria-pressed={isMitigated}
-                        disabled={isPending}
-                        onClick={() => handleMitigationToggle(alert)}
-                        className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition-colors ${
-                          isMitigated
-                            ? "border border-emerald-300/25 bg-emerald-400/15 text-emerald-50"
-                            : "bg-emerald-500 text-slate-950 shadow-[0_0_24px_rgba(52,211,153,0.24)] hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-70"
-                        }`}
-                      >
-                        <CheckCircle2 className="h-4 w-4" />
-                        {isMitigated ? "Mitigated" : isPending ? "Updating Score..." : "Mark as Mitigated"}
-                      </button>
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-white">This is an easy mitigation action</p>
+                          <p className="mt-1 text-xs text-slate-300">
+                            Marking it complete applies a {getMitigationBoost(alert.level)} point security score lift.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          aria-pressed={isMitigated}
+                          disabled={isPending}
+                          onClick={() => handleMitigationToggle(alert)}
+                          className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition-colors ${
+                            isMitigated
+                              ? "border border-emerald-300/25 bg-emerald-400/15 text-emerald-50"
+                              : "bg-emerald-500 text-slate-950 shadow-[0_0_24px_rgba(52,211,153,0.24)] hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-70"
+                          }`}
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                          {isMitigated ? "Mitigated" : isPending ? "Updating Score..." : "Mark as Mitigated"}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="mt-5 rounded-2xl border border-dashed border-white/8 bg-white/[0.02] px-4 py-3 text-xs uppercase tracking-[0.18em] text-slate-500">
-                    Requires a larger remediation project
-                  </div>
-                )}
-              </motion.article>
-            );
-          })
+                  ) : (
+                    <div className="mt-5 rounded-2xl border border-dashed border-white/8 bg-white/[0.02] px-4 py-3 text-xs uppercase tracking-[0.18em] text-slate-500">
+                      Requires a larger remediation project
+                    </div>
+                  )}
+                </motion.article>
+              );
+            })}
+          </StaggeredFeed>
         ) : (
           <div className="card-glass rounded-[1.5rem] p-5 text-sm text-slate-400">
             No alerts are available yet. Run a scan first.

@@ -4,6 +4,7 @@ import { NeuralSecHeader } from "@/components/neuralsec-header";
 import { ReportContentTabs } from "@/components/report-content-tabs";
 import { ReportActionAssistantModal } from "@/components/report-action-assistant-modal";
 import { SetupNotice } from "@/components/site";
+import { TypewriterHeading } from "@/components/typewriter-heading";
 import { getAllQuestions } from "@/lib/assessment-dal";
 import { getLatestAssessmentReportData } from "@/lib/assessment-report";
 import { createServerClientSafe, hasSupabaseEnv } from "@/lib/supabase";
@@ -59,9 +60,11 @@ export default async function ReportPage() {
             <div className="text-sm uppercase tracking-[0.32em] text-cyan-400 [font-family:var(--font-mono)]">
               SeKeyity Action Report
             </div>
-            <h1 className="text-6xl font-bold tracking-tight text-white [font-family:var(--font-display)] md:text-7xl xl:text-[5.75rem]">
-              What do I do now?
-            </h1>
+            <TypewriterHeading
+              text="What do I do now?"
+              speed={64}
+              className="text-6xl font-bold tracking-tight text-white [font-family:var(--font-display)] md:text-7xl xl:text-[5.75rem]"
+            />
             <p className="max-w-4xl text-xl leading-9 text-slate-300 md:text-2xl">
               Action page for <span className="font-medium text-white">{report?.orgName ?? "your organization"}</span>. Review the failed frameworks, then use the chatbot to turn them into an achievable plan.
             </p>

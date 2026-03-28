@@ -3,6 +3,7 @@ import { BellRing } from "lucide-react";
 import { AlertsMitigationBoard } from "@/components/alerts-mitigation-board";
 import { NeuralSecHeader } from "@/components/neuralsec-header";
 import { SetupNotice } from "@/components/site";
+import { TypewriterHeading } from "@/components/typewriter-heading";
 import { getLatestAssessmentReportData } from "@/lib/assessment-report";
 import { createServerClientSafe, hasSupabaseEnv } from "@/lib/supabase";
 
@@ -40,9 +41,10 @@ export default async function AlertsPage() {
             <BellRing className="h-5 w-5" />
             <span className="text-xs uppercase tracking-[0.3em] [font-family:var(--font-mono)]">Full Alert Log</span>
           </div>
-          <h1 className="mt-3 text-4xl font-bold tracking-tight text-white [font-family:var(--font-display)]">
-            View All Alerts
-          </h1>
+          <TypewriterHeading
+            text="View All Alerts"
+            className="mt-3 text-4xl font-bold tracking-tight text-white [font-family:var(--font-display)]"
+          />
           <p className="mt-2 text-slate-400">
             Complete, unfiltered alert list from the latest assessment output, ordered by risk priority.
           </p>

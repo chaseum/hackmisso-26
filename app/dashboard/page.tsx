@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { Download, ShieldPlus } from "lucide-react";
 import { DashboardSecurityData } from "@/components/dashboard-security-data";
+import { TiltCard } from "@/components/motion-ui";
 import { NeuralSecHeader } from "@/components/neuralsec-header";
 import { ReportActionAssistantModal } from "@/components/report-action-assistant-modal";
 import { SetupNotice } from "@/components/site";
+import { TypewriterHeading } from "@/components/typewriter-heading";
 import { getLatestAssessmentReportData } from "@/lib/assessment-report";
 import { createServerClientSafe, hasSupabaseEnv } from "@/lib/supabase";
 
@@ -129,9 +131,11 @@ export default async function DashboardPage() {
               <span className="h-2 w-2 rounded-full bg-cyan-400" />
               Command Center
             </div>
-            <h1 className="text-6xl font-bold tracking-tight text-white [font-family:var(--font-display)] md:text-7xl xl:text-[5.75rem]">
-              Hey {userDisplayName}, how&apos;s security today?
-            </h1>
+            <TypewriterHeading
+              text={`Hey ${userDisplayName}, how's security today?`}
+              speed={64}
+              className="text-6xl font-bold tracking-tight text-white [font-family:var(--font-display)] md:text-7xl xl:text-[5.75rem]"
+            />
             <p className="max-w-4xl text-xl leading-9 text-slate-300 md:text-2xl">
               Fast triage for <span className="font-medium text-white">{orgName}</span> based on the latest assessment snapshot.
             </p>
@@ -157,12 +161,10 @@ export default async function DashboardPage() {
 
         <div className="grid grid-cols-12 items-stretch gap-6">
           <div className="col-span-12 flex flex-col gap-6 lg:col-span-7">
-            <section
-              className="card-glass fade-up relative flex h-full min-h-[42rem] flex-col items-center justify-center overflow-hidden rounded-[2.5rem] p-12"
-              style={{ animationDelay: "0.1s" }}
-            >
-              <div className="hex-pattern pointer-events-none absolute top-0 left-0 h-full w-full opacity-10" />
-              <div className="relative flex h-72 w-72 items-center justify-center">
+            <TiltCard className="card-glass fade-up relative h-full min-h-[42rem] overflow-hidden rounded-[2.5rem] p-12">
+              <div className="relative flex h-full min-h-[34rem] w-full flex-col items-center justify-center text-center">
+                <div className="hex-pattern pointer-events-none absolute top-0 left-0 h-full w-full opacity-10" />
+                <div className="relative flex h-72 w-72 items-center justify-center">
                 <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
                   <circle
                     cx="50"
@@ -194,13 +196,14 @@ export default async function DashboardPage() {
                   </span>
                 </div>
               </div>
-              <div className="mt-8 text-center">
-                <span className={`rounded-full border px-5 py-2 text-sm font-bold uppercase tracking-widest ${postureAccent}`}>
-                  {postureLabel}
-                </span>
-                <p className="mt-4 text-sm text-slate-400">Current risk exposure: {riskScorePercent}/100</p>
+                <div className="mt-8 text-center">
+                  <span className={`rounded-full border px-5 py-2 text-sm font-bold uppercase tracking-widest ${postureAccent}`}>
+                    {postureLabel}
+                  </span>
+                  <p className="mt-4 text-sm text-slate-400">Current risk exposure: {riskScorePercent}/100</p>
+                </div>
               </div>
-            </section>
+            </TiltCard>
           </div>
 
           <aside className="fade-up col-span-12 flex flex-col gap-6 lg:col-span-5" style={{ animationDelay: "0.2s" }}>
