@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { AssessmentRecommendation } from "@/types/database";
+import type { AssessmentRecommendation, OrgProfile } from "@/types/database";
 
 export type FailedQuestionContext = {
   questionId: string;
@@ -81,6 +81,7 @@ export function buildFallbackRecommendations(
 
 export async function generateCyberRecommendations(
   failedQuestions: FailedQuestionContext[],
+  orgProfile: OrgProfile,
 ) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -113,7 +114,7 @@ export async function generateCyberRecommendations(
         {
           role: "system",
           content: `
-You are a cybersecurity risk advisor for small businesses and nonprofits.
+You are a cybersecurity expert consulting for a ${orgProfile.size}-person ${orgProfile.type} called ${orgProfile.name}.
 
 You will receive failed security controls, including:
 - the original yes/no assessment question
@@ -148,6 +149,7 @@ Hard rules:
 8. Use the provided framework reference exactly as written.
 9. If multiple failed controls are similar, keep each recommendation distinct and tied to that control's actual risk.
 10. Do not include markdown, commentary, or any text outside the JSON object.
+11. Tailor all actionable fixes to the organization type and size. For example, if they are a small nonprofit, prioritize free, built-in, or highly accessible tools rather than expensive enterprise solutions.
 
 Writing guidance:
 - "title": short, concrete, risk-oriented, not a reworded question

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAllQuestions, getFrameworkTextForFailedQuestions, insertCompletedAssessment } from "@/lib/assessment-dal";
-import type { AssessmentRecommendation, AssessmentResponse, QuestionRow } from "@/types/database";
+import type { AssessmentRecommendation, AssessmentResponse, OrgProfile, QuestionRow } from "@/types/database";
 import {
   buildFallbackRecommendations,
   formatRecommendationsAsMarkdown,
@@ -17,7 +17,14 @@ type AssessmentRequestBody =
   | AssessmentAnswerInput[]
   | {
       answers: AssessmentAnswerInput[];
+      orgProfile?: OrgProfile;
     };
+
+const DEFAULT_ORG_PROFILE: OrgProfile = {
+  name: "",
+  type: "Nonprofit",
+  size: "1-10",
+};
 
 function normalizeAnswers(body: AssessmentRequestBody) {
   if (Array.isArray(body)) {
@@ -29,6 +36,32 @@ function normalizeAnswers(body: AssessmentRequestBody) {
   }
 
   return null;
+}
+
+function normalizeOrgProfile(body: AssessmentRequestBody) {
+  if (!body || Array.isArray(body) || typeof body !== "object") {
+    return DEFAULT_ORG_PROFILE;
+  }
+
+  const candidate = body.orgProfile;
+  if (!candidate || typeof candidate !== "object") {
+    return DEFAULT_ORG_PROFILE;
+  }
+
+  return {
+    name: typeof candidate.name === "string" ? candidate.name : DEFAULT_ORG_PROFILE.name,
+    type:
+      candidate.type === "Nonprofit" ||
+      candidate.type === "Small Business" ||
+      candidate.type === "Student Organization" ||
+      candidate.type === "Startup"
+        ? candidate.type
+        : DEFAULT_ORG_PROFILE.type,
+    size:
+      candidate.size === "1-10" || candidate.size === "11-50" || candidate.size === "50+"
+        ? candidate.size
+        : DEFAULT_ORG_PROFILE.size,
+  };
 }
 
 function isValidAnswer(answer: unknown): answer is AssessmentAnswerInput {
@@ -65,6 +98,7 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as AssessmentRequestBody;
     const answers = normalizeAnswers(body);
+    const orgProfile = normalizeOrgProfile(body);
 
     if (!answers || answers.length === 0) {
       return NextResponse.json({ error: "Request body must include at least one answer." }, { status: 400 });
@@ -126,7 +160,7 @@ export async function POST(request: Request) {
       recommendations = buildFallbackRecommendations([]);
     } else {
       try {
-        recommendations = await generateCyberRecommendations(failedQuestions);
+        recommendations = await generateCyberRecommendations(failedQuestions, orgProfile);
       } catch (error) {
         console.error("Falling back after OpenAI recommendation failure:", error);
         recommendations = buildFallbackRecommendations(failedQuestions);
@@ -141,6 +175,7 @@ export async function POST(request: Request) {
       raw_responses: rawResponses,
       failed_question_ids: failedQuestions.map((question) => question.questionId),
       ai_recommendations: recommendationsMarkdown,
+      org_profile: orgProfile,
     });
 
     return NextResponse.json(

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { QuestionRow } from "@/types/database";
+import type { OrgProfile, QuestionRow } from "@/types/database";
 
 type Status = "idle" | "fetching_questions" | "analyzing_risk" | "success" | "error";
 
@@ -34,6 +34,11 @@ type AssessmentResult = {
 export default function TestHarnessPage() {
   const [questions, setQuestions] = useState<QuestionRow[]>([]);
   const [answers, setAnswers] = useState<AnswerMap>({});
+  const [orgProfile, setOrgProfile] = useState<OrgProfile>({
+    name: "",
+    type: "Nonprofit",
+    size: "1-10",
+  });
   const [status, setStatus] = useState<Status>("idle");
   const [results, setResults] = useState<AssessmentResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -117,7 +122,10 @@ export default function TestHarnessPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          answers: payload,
+          orgProfile,
+        }),
       });
 
       const data = (await response.json()) as AssessmentResult & {
@@ -147,6 +155,62 @@ export default function TestHarnessPage() {
       {errorMessage ? <p className="mb-4 text-red-600">{errorMessage}</p> : null}
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        <fieldset className="space-y-3">
+          <legend className="font-medium">Pre-Questionnaire</legend>
+
+          <div>
+            <label htmlFor="org-name">Organization Name</label>
+            <input
+              id="org-name"
+              type="text"
+              value={orgProfile.name}
+              onChange={(event) =>
+                setOrgProfile((currentProfile) => ({
+                  ...currentProfile,
+                  name: event.target.value,
+                }))
+              }
+            />
+          </div>
+
+          <div>
+            <label htmlFor="org-type">Organization Type</label>
+            <select
+              id="org-type"
+              value={orgProfile.type}
+              onChange={(event) =>
+                setOrgProfile((currentProfile) => ({
+                  ...currentProfile,
+                  type: event.target.value as OrgProfile["type"],
+                }))
+              }
+            >
+              <option value="Nonprofit">Nonprofit</option>
+              <option value="Small Business">Small Business</option>
+              <option value="Student Organization">Student Organization</option>
+              <option value="Startup">Startup</option>
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="org-size">Organization Size</label>
+            <select
+              id="org-size"
+              value={orgProfile.size}
+              onChange={(event) =>
+                setOrgProfile((currentProfile) => ({
+                  ...currentProfile,
+                  size: event.target.value as OrgProfile["size"],
+                }))
+              }
+            >
+              <option value="1-10">1-10</option>
+              <option value="11-50">11-50</option>
+              <option value="50+">50+</option>
+            </select>
+          </div>
+        </fieldset>
+
         {questions.map((question) => (
           <fieldset key={question.id} className="space-y-2">
             <legend className="font-medium">{question.plain_text_question}</legend>

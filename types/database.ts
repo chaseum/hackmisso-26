@@ -45,6 +45,12 @@ export type AssessmentRecommendation = {
   priority?: "low" | "medium" | "high";
 };
 
+export type OrgProfile = {
+  name: string;
+  type: "Nonprofit" | "Small Business" | "Student Organization" | "Startup";
+  size: "1-10" | "11-50" | "50+";
+};
+
 export type AssessmentResponse = {
   questionId: string;
   userAnsweredYes: boolean;
@@ -62,6 +68,7 @@ export type AssessmentRow = {
   raw_responses: AssessmentResponse[];
   failed_question_ids: string[];
   ai_recommendations: string;
+  org_profile: OrgProfile;
   created_at: string;
 };
 
@@ -72,4 +79,5 @@ export type InsertAssessmentInput = {
   raw_responses: AssessmentResponse[];
   failed_question_ids: string[];
   ai_recommendations: string;
+  org_profile: OrgProfile;
 };

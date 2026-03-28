@@ -56,6 +56,7 @@ export async function insertCompletedAssessment(input: InsertAssessmentInput) {
       raw_responses: input.raw_responses,
       failed_question_ids: input.failed_question_ids,
       ai_recommendations: input.ai_recommendations,
+      org_profile: input.org_profile,
     })
     .select("*")
     .single();
