@@ -21,7 +21,7 @@ create table if not exists public.assessments (
   high_priority_flags integer not null default 0 check (high_priority_flags >= 0),
   raw_responses jsonb not null,
   failed_question_ids text[] not null default '{}'::text[],
-  ai_recommendations jsonb not null default '[]'::jsonb,
+  ai_recommendations text not null default '',
   created_at timestamptz not null default timezone('utc'::text, now())
 );
 

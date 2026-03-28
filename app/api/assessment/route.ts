@@ -79,6 +79,38 @@ function parseOpenAIJson(content: string) {
   }
 }
 
+function formatRecommendationsAsMarkdown(recommendations: AssessmentRecommendation[]) {
+  if (recommendations.length === 0) {
+    return [
+      "# Cybersecurity Recommendations",
+      "",
+      "## Executive Summary",
+      "- No remediation recommendations were generated.",
+    ].join("\n");
+  }
+
+  return [
+    "# Cybersecurity Recommendations",
+    "",
+    "## Executive Summary",
+    `- ${recommendations.length} prioritized recommendation(s) were generated from the failed controls.`,
+    "",
+    "## Prioritized Recommendations",
+    ...recommendations.map((recommendation, index) =>
+      [
+        `### ${index + 1}. ${recommendation.title}`,
+        `- Priority: ${recommendation.priority ?? "unspecified"}`,
+        recommendation.framework_reference
+          ? `- Framework reference: ${recommendation.framework_reference}`
+          : null,
+        `- Action: ${recommendation.summary}`,
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    ),
+  ].join("\n\n");
+}
+
 async function generateRecommendations(failedQuestions: FailedQuestionContext[]) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -216,6 +248,7 @@ export async function POST(request: Request) {
             },
           ] satisfies AssessmentRecommendation[])
         : await generateRecommendations(failedQuestions);
+    const recommendationsMarkdown = formatRecommendationsAsMarkdown(recommendations);
 
     const assessment = await insertCompletedAssessment({
       total_score: totalScore,
@@ -223,7 +256,7 @@ export async function POST(request: Request) {
       high_priority_flags: highPriorityFlags,
       raw_responses: rawResponses,
       failed_question_ids: failedQuestions.map((question) => question.questionId),
-      ai_recommendations: recommendations,
+      ai_recommendations: recommendationsMarkdown,
     });
 
     return NextResponse.json(

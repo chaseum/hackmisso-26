@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { generateCyberRecommendations } from "@/lib/ai";
 import { insertCompletedAssessment } from "@/lib/assessment-dal";
 import { createServerClient } from "@/lib/supabase";
-import type { AssessmentRecommendation } from "@/types/database";
 
 async function getCurrentUserId() {
   const supabase = await createServerClient();
@@ -121,6 +121,58 @@ export interface ProcessedVulnerability {
   category: string;
 }
 
+const AI_RECOMMENDATION_TIMEOUT_MS = 20_000;
+
+async function generateAssessmentRecommendations(
+  riskScoreData: {
+    totalScore: number;
+    scorePercent: number;
+    highPriorityCount: number;
+    vulnerabilities: ProcessedVulnerability[];
+    rawResponses: FrontendResponse[];
+  },
+  failedQuestionIds: string[],
+) {
+  if (failedQuestionIds.length === 0) {
+    return [
+      "# Cybersecurity Recommendations",
+      "",
+      "## Executive Summary",
+      "- No failed controls were detected in this assessment.",
+      "",
+      "## Prioritized Recommendations",
+      "- No remediation steps are required based on the submitted answers.",
+    ].join("\n");
+  }
+
+  try {
+    return await Promise.race([
+      generateCyberRecommendations(riskScoreData, failedQuestionIds),
+      new Promise<string>((_, reject) => {
+        setTimeout(() => {
+          reject(new Error("OpenAI recommendation request timed out."));
+        }, AI_RECOMMENDATION_TIMEOUT_MS);
+      }),
+    ]);
+  } catch (error) {
+    console.error("Falling back after recommendation generation failed:", error);
+
+    return [
+      "# Cybersecurity Recommendations",
+      "",
+      "## Executive Summary",
+      "- Automated recommendation generation was unavailable during submission.",
+      `- ${failedQuestionIds.length} failed control(s) were still recorded successfully.`,
+      "",
+      "## Prioritized Recommendations",
+      ...riskScoreData.vulnerabilities.map(
+        (vulnerability, index) =>
+          `${index + 1}. Review **${vulnerability.issue}** and remediate it based on its ${vulnerability.category.toLowerCase()} priority.`,
+      ),
+    ].join("\n");
+  }
+}
+
 export async function processAssessment(responses: FrontendResponse[]) {
   await getCurrentUserId();
   const vulnerabilities: ProcessedVulnerability[] = [];
@@ -152,18 +204,23 @@ export async function processAssessment(responses: FrontendResponse[]) {
 
   const overallRiskRating = maxPossibleScore === 0 ? 0 : (totalScore / maxPossibleScore) * 100;
   const highPriorityCount = vulnerabilities.filter((v) => v.priorityScore >= 4).length;
-  const aiRecommendations: AssessmentRecommendation[] = vulnerabilities.map((vulnerability) => ({
-    title: vulnerability.issue,
-    summary: `Address ${vulnerability.issue.toLowerCase()} to improve your score and reduce near-term cyber risk.`,
-    priority: vulnerability.priorityScore >= 6 ? "high" : vulnerability.priorityScore >= 4 ? "medium" : "low",
-  }));
+  const scorePercent = Number(overallRiskRating.toFixed(2));
+  const failedQuestionIds = vulnerabilities.map((vulnerability) => vulnerability.questionId);
+  const riskScoreData = {
+    totalScore,
+    scorePercent,
+    highPriorityCount,
+    vulnerabilities,
+    rawResponses: responses,
+  };
+  const aiRecommendations = await generateAssessmentRecommendations(riskScoreData, failedQuestionIds);
 
   const assessment = await insertCompletedAssessment({
     total_score: totalScore,
-    score_percent: Number(overallRiskRating.toFixed(2)),
+    score_percent: scorePercent,
     high_priority_flags: highPriorityCount,
     raw_responses: responses,
-    failed_question_ids: vulnerabilities.map((vulnerability) => vulnerability.questionId),
+    failed_question_ids: failedQuestionIds,
     ai_recommendations: aiRecommendations,
   });
 

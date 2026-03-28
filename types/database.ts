@@ -61,7 +61,7 @@ export type AssessmentRow = {
   high_priority_flags: number;
   raw_responses: AssessmentResponse[];
   failed_question_ids: string[];
-  ai_recommendations: AssessmentRecommendation[];
+  ai_recommendations: string;
   created_at: string;
 };
 
@@ -71,5 +71,5 @@ export type InsertAssessmentInput = {
   high_priority_flags: number;
   raw_responses: AssessmentResponse[];
   failed_question_ids: string[];
-  ai_recommendations: AssessmentRecommendation[];
+  ai_recommendations: string;
 };

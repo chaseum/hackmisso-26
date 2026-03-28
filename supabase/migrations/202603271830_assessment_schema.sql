@@ -102,14 +102,24 @@ create table if not exists public.assessments (
   high_priority_flags integer not null default 0 check (high_priority_flags >= 0),
   raw_responses jsonb not null,
   failed_question_ids text[] not null default '{}'::text[],
-  ai_recommendations jsonb not null default '[]'::jsonb,
+  ai_recommendations text not null default '',
   created_at timestamptz not null default timezone('utc'::text, now())
 );
 
 alter table public.assessments
   add column if not exists score_percent numeric,
   add column if not exists failed_question_ids text[] not null default '{}'::text[],
-  add column if not exists ai_recommendations jsonb not null default '[]'::jsonb;
+  add column if not exists ai_recommendations text not null default '';
+
+alter table public.assessments
+  alter column ai_recommendations type text
+  using case
+    when ai_recommendations is null then ''
+    when jsonb_typeof(ai_recommendations) = 'string' then ai_recommendations #>> '{}'
+    else ai_recommendations::text
+  end,
+  alter column ai_recommendations set default '',
+  alter column ai_recommendations set not null;
 
 update public.assessments
 set score_percent = case
