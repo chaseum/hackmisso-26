@@ -54,10 +54,16 @@ export async function updateSession(request: NextRequest) {
   });
 
   const { data: { user } } = await supabase.auth.getUser();
-  const isDashboardRoute = request.nextUrl.pathname.startsWith("/dashboard");
+  const isProtectedRoute =
+    request.nextUrl.pathname.startsWith("/dashboard") ||
+    request.nextUrl.pathname.startsWith("/test-harness") ||
+    request.nextUrl.pathname.startsWith("/prequestionnaire") ||
+    request.nextUrl.pathname.startsWith("/questionnaire") ||
+    request.nextUrl.pathname.startsWith("/report") ||
+    request.nextUrl.pathname.startsWith("/alerts");
   const isAuthRoute = request.nextUrl.pathname.startsWith("/sign-in") || request.nextUrl.pathname.startsWith("/sign-up");
 
-  if (!user && isDashboardRoute) {
+  if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/sign-in";
     return NextResponse.redirect(url);

@@ -84,11 +84,11 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
         <>
           <div className="space-y-2">
             <Label htmlFor="full_name">Full name</Label>
-            <Input id="full_name" name="full_name" placeholder="Avery Chen" required />
+            <Input id="full_name" name="full_name" placeholder="John Doe" required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="team_name">Team name</Label>
-            <Input id="team_name" name="team_name" placeholder="Northstar Strategy" />
+            <Input id="team_name" name="team_name" placeholder="Example Organization" />
           </div>
         </>
       ) : null}
@@ -103,6 +103,6 @@ export function AuthFooter({ mode }: { mode: "sign-in" | "sign-up" }) {
   return mode === "sign-in" ? (
     <p className="text-sm text-slate-500">New here? <Link className="font-medium text-[var(--accent)]" href="/sign-up">Create an account</Link></p>
   ) : (
-    <p className="text-sm text-slate-500">Already have an account? <Link className="font-medium text-[var(--accent)]" href="/sign-in">Sign in</Link></p>
+    <p className="text-sm text-slate-500">Already have an account? <Link className="font-medium text-[var(--accent)]" href="/">Sign in</Link></p>
   );
 }

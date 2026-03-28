@@ -40,7 +40,9 @@ export type QuestionRow = {
 
 export type AssessmentRecommendation = {
   title: string;
-  summary: string;
+  why_it_matters: string;
+  actionable_fix: string;
+  summary?: string;
   framework_reference?: string;
   priority?: "low" | "medium" | "high";
 };

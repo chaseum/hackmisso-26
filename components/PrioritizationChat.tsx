@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Loader2, Sparkles } from "lucide-react";
-import { Card } from "@/components/ui";
 
 type JsonValue =
   | string
@@ -18,16 +17,18 @@ type ChatMessage = {
 };
 
 type PrioritizationChatProps = {
-  assessmentResults: { [key: string]: JsonValue };
+  results?: { [key: string]: JsonValue };
+  assessmentResults?: { [key: string]: JsonValue };
 };
 
 const PROMPT_OPTIONS = [
-  "What is the single most important thing we should fix this month?",
-  "Which improvement reduces the most risk for the lowest effort?",
-  "Create a step-by-step 30-day plan to tackle the top priority.",
+  "What is the absolute cheapest vulnerability I can fix today?",
+  "Explain my highest-risk alert to me like I am a beginner.",
+  "Create a step-by-step 30-day security plan for my student org.",
 ] as const;
 
-export function PrioritizationChat({ assessmentResults }: PrioritizationChatProps) {
+export function PrioritizationChat({ results, assessmentResults }: PrioritizationChatProps) {
+  const payloadResults = results ?? assessmentResults ?? {};
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
@@ -36,10 +37,67 @@ export function PrioritizationChat({ assessmentResults }: PrioritizationChatProp
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const lastAnimatedAssistantIndexRef = useRef(-1);
+  const [typingMessageIndex, setTypingMessageIndex] = useState<number | null>(0);
+  const [visibleAssistantText, setVisibleAssistantText] = useState(messages[0].content);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    const lastMessageIndex = messages.length - 1;
+    const lastMessage = messages[lastMessageIndex];
+
+    if (lastMessage?.role === "assistant" && lastMessageIndex > lastAnimatedAssistantIndexRef.current) {
+      lastAnimatedAssistantIndexRef.current = lastMessageIndex;
+      setTypingMessageIndex(lastMessageIndex);
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    if (typingMessageIndex === null) {
+      return;
+    }
+
+    const targetMessage = messages[typingMessageIndex];
+    if (!targetMessage || targetMessage.role !== "assistant") {
+      setTypingMessageIndex(null);
+      return;
+    }
+
+    setVisibleAssistantText("");
+    let currentCharacter = 0;
+    const text = targetMessage.content;
+    const timer = window.setInterval(() => {
+      currentCharacter += 1;
+      const nextText = text.slice(0, currentCharacter);
+      setVisibleAssistantText(nextText);
+
+      if (currentCharacter >= text.length) {
+        window.clearInterval(timer);
+        setTypingMessageIndex(null);
+      }
+    }, 28);
+
+    return () => window.clearInterval(timer);
+  }, [messages, typingMessageIndex]);
+
+  const renderedMessages = useMemo(
+    () =>
+      messages.map((message, index) => ({
+        ...message,
+        renderedContent:
+          message.role === "assistant" && index === typingMessageIndex
+            ? visibleAssistantText
+            : message.content,
+      })),
+    [messages, typingMessageIndex, visibleAssistantText],
+  );
+
+  function appendAssistantMessage(content: string) {
+    setMessages((current) => [...current, { role: "assistant", content }]);
+  }
 
   async function handlePromptClick(userPrompt: (typeof PROMPT_OPTIONS)[number]) {
     if (isLoading) {
@@ -57,7 +115,7 @@ export function PrioritizationChat({ assessmentResults }: PrioritizationChatProp
         },
         body: JSON.stringify({
           userPrompt,
-          assessmentResults,
+          assessmentResults: payloadResults,
         }),
       });
 
@@ -67,59 +125,56 @@ export function PrioritizationChat({ assessmentResults }: PrioritizationChatProp
         throw new Error(data.error || "Unable to generate a follow-up response.");
       }
 
-      setMessages((current) => [...current, { role: "assistant", content: data.response! }]);
+      appendAssistantMessage(data.response!);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unexpected error while getting follow-up guidance.";
-      setMessages((current) => [
-        ...current,
-        {
-          role: "assistant",
-          content: `I couldn't generate a prioritization response right now. ${message}`,
-        },
-      ]);
+      appendAssistantMessage(`I couldn't generate a prioritization response right now. ${message}`);
     } finally {
       setIsLoading(false);
     }
   }
 
   return (
-    <Card className="p-6">
+    <section className="rounded-[2rem] border border-cyan-500/12 bg-[#07111d] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.26)]">
       <div className="flex items-center gap-3">
-        <div className="flex size-11 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
+        <div className="flex size-12 items-center justify-center rounded-2xl border border-cyan-400/30 bg-cyan-500/12 text-cyan-200">
           <Sparkles className="size-5" />
         </div>
         <div>
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-[var(--accent)]">Prioritization</p>
-          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950 [font-family:var(--font-display)]">
-            Constrained Chatbot
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-200">Prioritization</p>
+          <h2 className="mt-1 text-3xl font-extrabold tracking-tight text-white [font-family:var(--font-display)]">
+            AI Action Assistant
           </h2>
         </div>
       </div>
 
-      <div className="mt-6 h-[22rem] overflow-y-auto rounded-[1.75rem] border border-slate-200/80 bg-slate-50/80 p-4">
+      <div className="mt-6 h-[24rem] overflow-y-auto rounded-[1.75rem] border border-white/8 bg-[#030b14] p-5">
         <div className="space-y-4">
-          {messages.map((message, index) => (
+          {renderedMessages.map((message, index) => (
             <div
               key={`${message.role}-${index}`}
               className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-[85%] rounded-3xl px-4 py-3 text-sm leading-7 shadow-sm ${
+                className={`max-w-[88%] rounded-3xl px-5 py-4 text-base leading-8 shadow-sm ${
                   message.role === "user"
-                    ? "bg-slate-950 text-white"
-                    : "border border-slate-200 bg-white text-slate-700"
+                    ? "border border-cyan-300/20 bg-cyan-500/90 font-semibold text-white"
+                    : "border border-white/8 bg-[#0b1624] text-slate-100"
                 }`}
               >
-                {message.content}
+                {message.renderedContent}
+                {message.role === "assistant" && index === typingMessageIndex ? (
+                  <span className="ml-1 inline-block h-5 w-0.5 animate-pulse bg-cyan-200 align-middle" />
+                ) : null}
               </div>
             </div>
           ))}
 
           {isLoading ? (
             <div className="flex justify-start">
-              <div className="inline-flex items-center gap-2 rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
+              <div className="inline-flex items-center gap-2 rounded-3xl border border-white/8 bg-[#0b1624] px-5 py-4 text-base text-slate-100 shadow-sm">
                 <Loader2 className="size-4 animate-spin" />
-                Building a focused recommendation...
+                Building a shorter recommendation...
               </div>
             </div>
           ) : null}
@@ -135,12 +190,12 @@ export function PrioritizationChat({ assessmentResults }: PrioritizationChatProp
             type="button"
             onClick={() => handlePromptClick(prompt)}
             disabled={isLoading}
-            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-[var(--accent)] hover:bg-[var(--accent-soft)] hover:text-slate-950 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-semibold text-slate-100 transition hover:border-cyan-400/30 hover:bg-cyan-500/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
           >
             {prompt}
           </button>
         ))}
       </div>
-    </Card>
+    </section>
   );
 }

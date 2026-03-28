@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import type { OrgProfile, QuestionRow } from "@/types/database";
 
 type Status = "idle" | "fetching_questions" | "analyzing_risk" | "success" | "error";
@@ -32,6 +34,7 @@ type AssessmentResult = {
 };
 
 export default function TestHarnessPage() {
+  const searchParams = useSearchParams();
   const [questions, setQuestions] = useState<QuestionRow[]>([]);
   const [answers, setAnswers] = useState<AnswerMap>({});
   const [orgProfile, setOrgProfile] = useState<OrgProfile>({
@@ -42,6 +45,35 @@ export default function TestHarnessPage() {
   const [status, setStatus] = useState<Status>("idle");
   const [results, setResults] = useState<AssessmentResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showOrgProfileForm, setShowOrgProfileForm] = useState(true);
+
+  useEffect(() => {
+    const orgName = searchParams.get("orgName")?.trim() ?? "";
+    const orgType = searchParams.get("orgType");
+    const orgSize = searchParams.get("orgSize");
+
+    const nextType: OrgProfile["type"] =
+      orgType === "Nonprofit" ||
+      orgType === "Small Business" ||
+      orgType === "Student Organization" ||
+      orgType === "Startup"
+        ? orgType
+        : "Nonprofit";
+
+    const nextSize: OrgProfile["size"] =
+      orgSize === "1-10" || orgSize === "11-50" || orgSize === "50+"
+        ? orgSize
+        : "1-10";
+
+    const hasPrefilledProfile = Boolean(orgName);
+
+    setOrgProfile({
+      name: orgName,
+      type: nextType,
+      size: nextSize,
+    });
+    setShowOrgProfileForm(!hasPrefilledProfile);
+  }, [searchParams]);
 
   useEffect(() => {
     let isMounted = true;
@@ -105,6 +137,18 @@ export default function TestHarnessPage() {
     }));
   }
 
+  function resetAssessment() {
+    setAnswers(
+      questions.reduce<AnswerMap>((accumulator, question) => {
+        accumulator[question.id] = null;
+        return accumulator;
+      }, {}),
+    );
+    setResults(null);
+    setErrorMessage(null);
+    setStatus("idle");
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setStatus("analyzing_risk");
@@ -154,62 +198,86 @@ export default function TestHarnessPage() {
 
       {errorMessage ? <p className="mb-4 text-red-600">{errorMessage}</p> : null}
 
+      {results ? (
+        <button
+          type="button"
+          onClick={resetAssessment}
+          className="mb-4 border px-3 py-2"
+        >
+          Retake assessment
+        </button>
+      ) : null}
+
       <form onSubmit={handleSubmit} className="space-y-6">
-        <fieldset className="space-y-3">
-          <legend className="font-medium">Pre-Questionnaire</legend>
+        {showOrgProfileForm ? (
+          <fieldset className="space-y-3">
+            <legend className="font-medium">Pre-Questionnaire</legend>
 
-          <div>
-            <label htmlFor="org-name">Organization Name</label>
-            <input
-              id="org-name"
-              type="text"
-              value={orgProfile.name}
-              onChange={(event) =>
-                setOrgProfile((currentProfile) => ({
-                  ...currentProfile,
-                  name: event.target.value,
-                }))
-              }
-            />
-          </div>
+            <div>
+              <label htmlFor="org-name">Organization Name</label>
+              <input
+                id="org-name"
+                type="text"
+                value={orgProfile.name}
+                onChange={(event) =>
+                  setOrgProfile((currentProfile) => ({
+                    ...currentProfile,
+                    name: event.target.value,
+                  }))
+                }
+              />
+            </div>
 
-          <div>
-            <label htmlFor="org-type">Organization Type</label>
-            <select
-              id="org-type"
-              value={orgProfile.type}
-              onChange={(event) =>
-                setOrgProfile((currentProfile) => ({
-                  ...currentProfile,
-                  type: event.target.value as OrgProfile["type"],
-                }))
-              }
-            >
-              <option value="Nonprofit">Nonprofit</option>
-              <option value="Small Business">Small Business</option>
-              <option value="Student Organization">Student Organization</option>
-              <option value="Startup">Startup</option>
-            </select>
-          </div>
+            <div>
+              <label htmlFor="org-type">Organization Type</label>
+              <select
+                id="org-type"
+                value={orgProfile.type}
+                onChange={(event) =>
+                  setOrgProfile((currentProfile) => ({
+                    ...currentProfile,
+                    type: event.target.value as OrgProfile["type"],
+                  }))
+                }
+              >
+                <option value="Nonprofit">Nonprofit</option>
+                <option value="Small Business">Small Business</option>
+                <option value="Student Organization">Student Organization</option>
+                <option value="Startup">Startup</option>
+              </select>
+            </div>
 
-          <div>
-            <label htmlFor="org-size">Organization Size</label>
-            <select
-              id="org-size"
-              value={orgProfile.size}
-              onChange={(event) =>
-                setOrgProfile((currentProfile) => ({
-                  ...currentProfile,
-                  size: event.target.value as OrgProfile["size"],
-                }))
-              }
-            >
-              <option value="1-10">1-10</option>
-              <option value="11-50">11-50</option>
-              <option value="50+">50+</option>
-            </select>
+            <div>
+              <label htmlFor="org-size">Organization Size</label>
+              <select
+                id="org-size"
+                value={orgProfile.size}
+                onChange={(event) =>
+                  setOrgProfile((currentProfile) => ({
+                    ...currentProfile,
+                    size: event.target.value as OrgProfile["size"],
+                  }))
+                }
+              >
+                <option value="1-10">1-10</option>
+                <option value="11-50">11-50</option>
+                <option value="50+">50+</option>
+              </select>
+            </div>
+          </fieldset>
+        ) : (
+          <div className="border p-4">
+            <p className="font-medium">Organization profile</p>
+            <p>{orgProfile.name}</p>
+            <p>{orgProfile.type}</p>
+            <p>{orgProfile.size}</p>
+            <div className="mt-2">
+              <Link href="/prequestionnaire" className="underline">
+                Edit pre-questionnaire
+              </Link>
+            </div>
           </div>
-        </fieldset>
+        )}
 
         {questions.map((question) => (
           <fieldset key={question.id} className="space-y-2">

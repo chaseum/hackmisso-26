@@ -26,7 +26,7 @@ export function Navbar({ user }: { user: User | null }) {
             </>
           ) : (
             <>
-              <Button asChild variant="ghost" size="sm"><Link href="/sign-in">Sign in</Link></Button>
+              <Button asChild variant="ghost" size="sm"><Link href="/">Sign in</Link></Button>
               <Button asChild size="sm"><Link href="/sign-up">Get started</Link></Button>
             </>
           )}

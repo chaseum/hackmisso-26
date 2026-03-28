@@ -1,4 +1,5 @@
-import { Inbox } from "lucide-react";
+import * as AccordionPrimitive from "@radix-ui/react-accordion";
+import { ChevronDown, Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function Container({ className, children }: { className?: string; children: React.ReactNode }) {
@@ -107,4 +108,57 @@ export function EmptyState({ title, description }: { title: string; description:
 
 export function LoadingSkeleton({ className }: { className?: string }) {
   return <div className={cn("animate-pulse rounded-[2rem] bg-slate-200/70", className)} />;
+}
+
+export const Accordion = AccordionPrimitive.Root;
+
+export function AccordionItem({
+  className,
+  ...props
+}: React.ComponentProps<typeof AccordionPrimitive.Item>) {
+  return (
+    <AccordionPrimitive.Item
+      className={cn("overflow-hidden rounded-3xl border border-white/10 bg-white/5", className)}
+      {...props}
+    />
+  );
+}
+
+export function AccordionTrigger({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof AccordionPrimitive.Trigger>) {
+  return (
+    <AccordionPrimitive.Header className="flex">
+      <AccordionPrimitive.Trigger
+        className={cn(
+          "group flex flex-1 items-center justify-between gap-4 px-6 py-5 text-left text-sm font-semibold text-white transition hover:bg-white/[0.04]",
+          className,
+        )}
+        {...props}
+      >
+        {children}
+        <ChevronDown className="size-4 shrink-0 text-slate-400 transition duration-200 group-data-[state=open]:rotate-180 group-data-[state=open]:text-cyan-400" />
+      </AccordionPrimitive.Trigger>
+    </AccordionPrimitive.Header>
+  );
+}
+
+export function AccordionContent({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof AccordionPrimitive.Content>) {
+  return (
+    <AccordionPrimitive.Content
+      className={cn(
+        "overflow-hidden text-sm text-slate-300",
+        className,
+      )}
+      {...props}
+    >
+      <div className="px-6 pb-5 pt-1">{children}</div>
+    </AccordionPrimitive.Content>
+  );
 }

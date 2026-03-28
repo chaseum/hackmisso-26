@@ -25,11 +25,18 @@ export async function authenticateWithPassword(mode: "sign-in" | "sign-up", _pre
     const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: fullName, team_name: teamName } } });
     if (error) return { error: error.message, success: "" };
     revalidatePath("/", "layout");
-    redirect("/dashboard");
+    const nextPath = teamName ? `/prequestionnaire?orgName=${encodeURIComponent(teamName)}` : "/prequestionnaire";
+    redirect(nextPath);
   }
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return { error: error.message, success: "" };
+  if (error) {
+    const normalizedMessage = error.message.toLowerCase();
+    if (normalizedMessage.includes("invalid login credentials")) {
+      return { error: "Account not found.", success: "" };
+    }
+    return { error: error.message, success: "" };
+  }
   revalidatePath("/", "layout");
   redirect("/dashboard");
 }

@@ -1,12 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAllQuestions, getFrameworkTextForFailedQuestions, insertCompletedAssessment } from "@/lib/assessment-dal";
 import type { AssessmentRecommendation, AssessmentResponse, OrgProfile, QuestionRow } from "@/types/database";
-import {
-  buildFallbackRecommendations,
-  formatRecommendationsAsMarkdown,
-  generateCyberRecommendations,
-  type FailedQuestionContext,
-} from "@/lib/ai";
+import { buildFallbackRecommendations, generateCyberRecommendations, type FailedQuestionContext } from "@/lib/ai";
 
 type AssessmentAnswerInput = {
   questionId: string;
@@ -16,8 +11,8 @@ type AssessmentAnswerInput = {
 type AssessmentRequestBody =
   | AssessmentAnswerInput[]
   | {
-      answers: AssessmentAnswerInput[];
-      orgProfile?: OrgProfile;
+      answers?: unknown;
+      orgProfile?: unknown;
     };
 
 const DEFAULT_ORG_PROFILE: OrgProfile = {
@@ -31,7 +26,7 @@ function normalizeAnswers(body: AssessmentRequestBody) {
     return body;
   }
 
-  if (body && Array.isArray(body.answers)) {
+  if (body && typeof body === "object" && Array.isArray(body.answers)) {
     return body.answers;
   }
 
@@ -48,18 +43,19 @@ function normalizeOrgProfile(body: AssessmentRequestBody) {
     return DEFAULT_ORG_PROFILE;
   }
 
+  const partial = candidate as Partial<OrgProfile>;
   return {
-    name: typeof candidate.name === "string" ? candidate.name : DEFAULT_ORG_PROFILE.name,
+    name: typeof partial.name === "string" ? partial.name.trim() : DEFAULT_ORG_PROFILE.name,
     type:
-      candidate.type === "Nonprofit" ||
-      candidate.type === "Small Business" ||
-      candidate.type === "Student Organization" ||
-      candidate.type === "Startup"
-        ? candidate.type
+      partial.type === "Nonprofit" ||
+      partial.type === "Small Business" ||
+      partial.type === "Student Organization" ||
+      partial.type === "Startup"
+        ? partial.type
         : DEFAULT_ORG_PROFILE.type,
     size:
-      candidate.size === "1-10" || candidate.size === "11-50" || candidate.size === "50+"
-        ? candidate.size
+      partial.size === "1-10" || partial.size === "11-50" || partial.size === "50+"
+        ? partial.size
         : DEFAULT_ORG_PROFILE.size,
   };
 }
@@ -94,6 +90,36 @@ function buildResponseRows(answers: AssessmentAnswerInput[], questionMap: Map<st
   return responses;
 }
 
+function buildFailedQuestionContexts(
+  rawResponses: AssessmentResponse[],
+  questionMap: Map<string, QuestionRow>,
+  frameworkMap: Map<string, Pick<QuestionRow, "id" | "framework_name" | "framework_reference" | "framework_excerpt">>,
+) {
+  return rawResponses
+    .filter((response) => !response.userAnsweredYes)
+    .map((response) => {
+      const question = questionMap.get(response.questionId);
+      const framework = frameworkMap.get(response.questionId);
+
+      if (!question || !framework) {
+        throw new Error(`Missing framework retrieval context for ${response.questionId}.`);
+      }
+
+      return {
+        questionId: response.questionId,
+        questionText: response.questionText,
+        category: question.category,
+        riskWeight: response.riskWeight,
+        effortLevel: response.effortLevel,
+        priorityScore: Number((response.riskWeight / response.effortLevel).toFixed(2)),
+        frameworkName: framework.framework_name,
+        frameworkReference: framework.framework_reference,
+        frameworkExcerpt: framework.framework_excerpt,
+      } satisfies FailedQuestionContext;
+    })
+    .sort((left, right) => right.priorityScore - left.priorityScore);
+}
+
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as AssessmentRequestBody;
@@ -101,7 +127,10 @@ export async function POST(request: Request) {
     const orgProfile = normalizeOrgProfile(body);
 
     if (!answers || answers.length === 0) {
-      return NextResponse.json({ error: "Request body must include at least one answer." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Request body must include both an `answers` array and an `orgProfile` object." },
+        { status: 400 },
+      );
     }
 
     if (!answers.every(isValidAnswer)) {
@@ -121,33 +150,10 @@ export async function POST(request: Request) {
 
     const frameworkRows = await getFrameworkTextForFailedQuestions(failedQuestionIds);
     const frameworkMap = new Map(frameworkRows.map((row) => [row.id, row]));
-
-    const failedQuestions: FailedQuestionContext[] = rawResponses
-      .filter((response) => !response.userAnsweredYes)
-      .map((response) => {
-        const question = questionMap.get(response.questionId);
-        const framework = frameworkMap.get(response.questionId);
-
-        if (!question || !framework) {
-          throw new Error(`Missing question or framework context for ${response.questionId}.`);
-        }
-
-        return {
-          questionId: response.questionId,
-          questionText: response.questionText,
-          category: question.category,
-          riskWeight: response.riskWeight,
-          effortLevel: response.effortLevel,
-          priorityScore: Number((response.riskWeight / response.effortLevel).toFixed(2)),
-          frameworkName: framework.framework_name,
-          frameworkReference: framework.framework_reference,
-          frameworkExcerpt: framework.framework_excerpt,
-        };
-      })
-      .sort((a, b) => b.priorityScore - a.priorityScore);
+    const failedQuestions = buildFailedQuestionContexts(rawResponses, questionMap, frameworkMap);
 
     const totalScore = rawResponses.reduce(
-      (sum, response) => sum + (response.userAnsweredYes ? response.riskWeight : 0),
+      (sum, response) => sum + (!response.userAnsweredYes ? response.riskWeight : 0),
       0,
     );
     const maxPossibleScore = rawResponses.reduce((sum, response) => sum + response.riskWeight, 0);
@@ -166,7 +172,8 @@ export async function POST(request: Request) {
         recommendations = buildFallbackRecommendations(failedQuestions);
       }
     }
-    const recommendationsMarkdown = formatRecommendationsAsMarkdown(recommendations);
+
+    const aiRecommendationsJson = JSON.stringify(recommendations);
 
     const assessment = await insertCompletedAssessment({
       total_score: totalScore,
@@ -174,7 +181,7 @@ export async function POST(request: Request) {
       high_priority_flags: highPriorityFlags,
       raw_responses: rawResponses,
       failed_question_ids: failedQuestions.map((question) => question.questionId),
-      ai_recommendations: recommendationsMarkdown,
+      ai_recommendations: aiRecommendationsJson,
       org_profile: orgProfile,
     });
 

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BarChart3, ClipboardList, Clock3, FilePenLine, FolderKanban, Gauge, LayoutDashboard, NotebookText } from "lucide-react";
+import { ClipboardList, FilePenLine, FolderKanban, Gauge, LayoutDashboard, NotebookText } from "lucide-react";
 import { addNoteAction, saveProjectAction, updateProfileAction } from "@/lib/actions";
 import type { createServerClient } from "@/lib/supabase";
 import { formatDateTime } from "@/lib/utils";
@@ -20,7 +20,6 @@ const navLinks = [
   { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
   { label: "Project", href: "/dashboard#project", icon: ClipboardList },
   { label: "Notes", href: "/dashboard#notes", icon: NotebookText },
-  { label: "Activity", href: "/dashboard#activity", icon: BarChart3 },
 ];
 
 export async function getDashboardData(supabase: DashboardSupabaseClient, userId: string) {
@@ -122,16 +121,6 @@ export function NotesPanel({ notes, projectId }: { notes: NoteRow[]; projectId: 
         <SubmitButton disabled={!projectId}>Add note</SubmitButton>
       </form>
       {notes.length === 0 ? <div className="mt-6"><EmptyState title="No notes yet" description="Use this section to capture customer quotes, assumptions, and talking points as the story comes together." /></div> : <div className="mt-6 space-y-3">{notes.map((note) => <div key={note.id} className="rounded-2xl border border-slate-200/80 p-4"><p className="text-sm leading-7 text-slate-700">{note.content}</p><p className="mt-2 text-xs text-slate-400">{formatDateTime(note.created_at)}</p></div>)}</div>}
-    </Card>
-  );
-}
-
-export function ActivityFeed({ notes }: { notes: NoteRow[] }) {
-  const items = notes.slice(0, 4);
-  return (
-    <Card id="activity" className="p-6">
-      <SectionHeader eyebrow="Activity" title="Recent momentum" description="A lightweight activity feed that helps during rehearsals and check-ins." />
-      {items.length === 0 ? <EmptyState title="No recent activity" description="Once notes are added, this feed becomes a quick demo-friendly narrative of progress." /> : <div className="mt-6 space-y-4">{items.map((note) => <div key={note.id} className="flex gap-3 rounded-2xl border border-slate-200/80 p-4"><div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]"><Clock3 className="size-4" /></div><div><p className="text-sm font-medium text-slate-900">Team note updated</p><p className="mt-1 text-sm leading-6 text-slate-600">{note.content}</p><p className="mt-2 text-xs text-slate-400">{formatDateTime(note.created_at)}</p></div></div>)}</div>}
     </Card>
   );
 }

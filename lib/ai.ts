@@ -26,38 +26,6 @@ function parseOpenAIJson(content: string) {
   }
 }
 
-export function formatRecommendationsAsMarkdown(recommendations: AssessmentRecommendation[]) {
-  if (recommendations.length === 0) {
-    return [
-      "# Cybersecurity Recommendations",
-      "",
-      "## Executive Summary",
-      "- No remediation recommendations were generated.",
-    ].join("\n");
-  }
-
-  return [
-    "# Cybersecurity Recommendations",
-    "",
-    "## Executive Summary",
-    `- ${recommendations.length} prioritized recommendation(s) were generated from the failed controls.`,
-    "",
-    "## Prioritized Recommendations",
-    ...recommendations.map((recommendation, index) =>
-      [
-        `### ${index + 1}. ${recommendation.title}`,
-        `- Priority: ${recommendation.priority ?? "unspecified"}`,
-        recommendation.framework_reference
-          ? `- Framework reference: ${recommendation.framework_reference}`
-          : null,
-        `- Action: ${recommendation.summary}`,
-      ]
-        .filter(Boolean)
-        .join("\n"),
-    ),
-  ].join("\n\n");
-}
-
 export function buildFallbackRecommendations(
   failedQuestions: FailedQuestionContext[],
 ): AssessmentRecommendation[] {
@@ -65,18 +33,31 @@ export function buildFallbackRecommendations(
     return [
       {
         title: "No failed controls detected",
-        summary: "All submitted answers were marked compliant, so no remediation steps were generated.",
         priority: "low",
+        framework_reference: undefined,
+        why_it_matters: "All submitted answers were marked compliant, so there are no failed controls requiring remediation right now.",
+        actionable_fix: "Keep the documented controls current and rerun the assessment after any major tooling, staffing, or process change.",
+        summary: "All submitted answers were marked compliant, so there are no failed controls requiring remediation right now. Keep the documented controls current and rerun the assessment after any major tooling, staffing, or process change.",
       },
     ];
   }
 
-  return failedQuestions.slice(0, 5).map((question) => ({
-    title: `Review ${question.frameworkReference}`,
-    summary: `If this control is left unresolved, the business is more exposed to preventable disruption or account compromise. Start by assigning one owner to address "${question.questionText}" and implement the framework control this week.`,
-    framework_reference: question.frameworkReference,
-    priority: question.priorityScore >= 3 ? "high" : "medium",
-  }));
+  return failedQuestions.slice(0, 5).map((question) => {
+    const priority = question.priorityScore >= 3 ? "high" : "medium";
+    const whyItMatters =
+      `If this control stays unresolved, ${question.category.toLowerCase()} weaknesses are more likely to lead to account compromise, avoidable downtime, or data exposure for the organization.`;
+    const actionableFix =
+      `Assign one owner to address "${question.questionText}" and implement the control described in ${question.frameworkReference} this week, starting with the simplest change your team can complete immediately.`;
+
+    return {
+      title: `Address ${question.frameworkReference} before it becomes an operational risk`,
+      priority,
+      framework_reference: question.frameworkReference,
+      why_it_matters: whyItMatters,
+      actionable_fix: actionableFix,
+      summary: `${whyItMatters} ${actionableFix}`,
+    };
+  });
 }
 
 export async function generateCyberRecommendations(
@@ -114,17 +95,19 @@ export async function generateCyberRecommendations(
         {
           role: "system",
           content: `
-You are a cybersecurity expert consulting for a ${orgProfile.size}-person ${orgProfile.type} called ${orgProfile.name}.
+You are a cybersecurity expert consulting for a ${orgProfile.size}-person ${orgProfile.type} named ${orgProfile.name || "the client"}.
 
 You will receive failed security controls, including:
 - the original yes/no assessment question
-- framework reference and excerpt
+- framework reference
+- enriched framework excerpt text
 - category
 - priority score
 - risk weight
 - effort level
 
 Your job is to convert those failed controls into a practical remediation report for a non-technical business owner.
+Tailor your recommendations to the organization's size and type. Prefer low-cost, realistic actions for small teams when appropriate.
 
 Return strict JSON only.
 Return a single object with one key: "recommendations".
@@ -132,38 +115,23 @@ Return a single object with one key: "recommendations".
 
 Each recommendation object must use exactly these keys:
 - "title"
-- "summary"
 - "priority"
+- "why_it_matters"
+- "actionable_fix"
 - "framework_reference"
 
 Hard rules:
 1. Do not restate or lightly rewrite the failed question.
 2. Do not say generic things like "improve security" or "follow best practices."
-3. Explain the actual business consequence in plain English, such as account takeover, payroll fraud, ransomware impact, loss of customer trust, downtime, data exposure, or inability to recover operations.
-4. The "summary" must include both:
-   - why it matters in plain English
-   - a specific first step the business can take now
+3. "why_it_matters" must explain the actual business consequence in plain English, such as account takeover, payroll fraud, ransomware impact, loss of customer trust, downtime, data exposure, or inability to recover operations.
+4. "actionable_fix" must provide a specific first step the business can take now.
 5. Prefer practical first actions over long-term strategy.
 6. Keep every field concise and useful.
 7. "priority" must be exactly one of: "low", "medium", "high".
 8. Use the provided framework reference exactly as written.
 9. If multiple failed controls are similar, keep each recommendation distinct and tied to that control's actual risk.
 10. Do not include markdown, commentary, or any text outside the JSON object.
-11. Tailor all actionable fixes to the organization type and size. For example, if they are a small nonprofit, prioritize free, built-in, or highly accessible tools rather than expensive enterprise solutions.
-
-Writing guidance:
-- "title": short, concrete, risk-oriented, not a reworded question
-- "summary": 2-4 sentences, with the first part explaining what could realistically go wrong for this business and the second part giving 1-2 practical first actions a small team can start this week
-
-Bad example:
-- title: "Enable Backups"
-- summary: "Backups are important for security. Set up backups."
-
-Good example:
-- title: "A Single Ransomware Incident Could Wipe Out Critical Records"
-- summary: "If files are encrypted or deleted, the business can lose customer records, financial data, and the ability to keep operating. Turn on automatic daily backups for the most important systems and keep one copy somewhere employee laptops and shared drives cannot reach."
-
-Base recommendations only on the supplied failed controls and framework context.
+11. Base recommendations only on the supplied failed controls and framework context.
           `.trim(),
         },
         {
@@ -171,6 +139,7 @@ Base recommendations only on the supplied failed controls and framework context.
           content: [
             "Generate prioritized remediation recommendations for these failed cybersecurity controls.",
             "Do not restate the control or paraphrase the yes/no question.",
+            "Use the enriched framework excerpt text as retrieval context.",
             "Focus on business consequence and the first practical action.",
             "",
             JSON.stringify(promptPayload, null, 2),
@@ -203,5 +172,8 @@ Base recommendations only on the supplied failed controls and framework context.
     throw new Error("OpenAI response did not include a recommendations array.");
   }
 
-  return parsed.recommendations;
+  return parsed.recommendations.map((recommendation) => ({
+    ...recommendation,
+    summary: recommendation.summary ?? `${recommendation.why_it_matters} ${recommendation.actionable_fix}`.trim(),
+  }));
 }

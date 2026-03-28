@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { Navbar } from "@/components/site";
-import { createServerClientSafe } from "@/lib/supabase";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -9,16 +7,10 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const supabase = await createServerClientSafe();
-  const { data: { user } } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
-
   return (
     <html lang="en">
       <body className="min-h-screen text-[var(--foreground)] [font-family:var(--font-body)]">
-        <div className="relative min-h-screen">
-          <Navbar user={user} />
-          {children}
-        </div>
+        <div className="relative min-h-screen">{children}</div>
       </body>
     </html>
   );
