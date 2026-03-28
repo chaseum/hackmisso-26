@@ -34,7 +34,7 @@ export default async function ReportPage() {
   };
 
   return (
-    <div className="grid-bg relative flex min-h-screen flex-col bg-[#010409] text-slate-300">
+    <div className="grid-bg paper-grid-bg relative flex min-h-screen flex-col bg-[#010409] text-slate-300">
       <NeuralSecHeader
         activeItem="mission"
         dashboardHref="/dashboard"
@@ -81,7 +81,6 @@ export default async function ReportPage() {
           >
             Failed Frameworks
           </a>
-          <ReportActionAssistantModal assessmentResults={chatPayload} />
         </section>
 
         <section className="grid gap-6">
@@ -146,6 +145,7 @@ export default async function ReportPage() {
           Back to data page
         </Link>
       </main>
+      {hasAssessment ? <ReportActionAssistantModal assessmentResults={chatPayload} mode="floating" /> : null}
     </div>
   );
 }

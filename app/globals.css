@@ -1,9 +1,8 @@
-@import url("https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,700,500&f[]=satoshi@700,500,400&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap");
+@import url("https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,700,500&display=swap");
 @import "tailwindcss";
 
 :root {
-  --background: #f7f8f4;
+  --background: #fffaf0;
   --foreground: #0f1720;
   --card: rgba(255, 255, 255, 0.9);
   --muted: #5d6776;
@@ -14,9 +13,9 @@
   --surface: #edf2ee;
   --ring: rgba(15, 118, 110, 0.22);
   --shadow: 0 24px 80px rgba(15, 23, 32, 0.08);
-  --font-body: "Satoshi", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-body: "Cabinet Grotesk", "Avenir Next", "Segoe UI", sans-serif;
   --font-display: "Cabinet Grotesk", "Avenir Next", "Segoe UI", sans-serif;
-  --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  --font-mono: "Cabinet Grotesk", "Avenir Next", "Segoe UI", sans-serif;
 }
 
 * {
@@ -34,7 +33,13 @@ body {
   background:
     radial-gradient(circle at top left, rgba(15, 118, 110, 0.08), transparent 24%),
     radial-gradient(circle at top right, rgba(17, 94, 89, 0.06), transparent 20%),
-    linear-gradient(180deg, #fbfcfa 0%, var(--background) 100%);
+    radial-gradient(circle at center, rgba(15, 23, 32, 0.025) 1px, transparent 1px),
+    linear-gradient(180deg, #fffdf7 0%, var(--background) 100%);
+  background-size:
+    auto,
+    auto,
+    26px 26px,
+    auto;
   color: var(--foreground);
   font-family: var(--font-body);
   text-rendering: optimizeLegibility;
@@ -84,6 +89,34 @@ textarea {
   box-shadow: var(--shadow);
 }
 
+.tactile-button {
+  transition:
+    transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.tactile-button:hover {
+  transform: scale(1.05);
+}
+
+.tactile-button:active {
+  transform: scale(0.95);
+}
+
+.paper-grid-bg {
+  background-image:
+    linear-gradient(to right, rgba(255, 250, 240, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 250, 240, 0.035) 1px, transparent 1px),
+    radial-gradient(circle at center, rgba(255, 250, 240, 0.08) 0.85px, transparent 0.95px);
+  background-size:
+    28px 28px,
+    28px 28px,
+    28px 28px;
+}
+
 /* Add this to app/globals.css */
 :root {
   --cyan-glow: #06b6d4;
@@ -92,9 +125,14 @@ textarea {
 }
 
 .grid-bg {
-  background-image: linear-gradient(to right, rgba(6, 182, 212, 0.05) 1px, transparent 1px), 
-                    linear-gradient(to bottom, rgba(6, 182, 212, 0.05) 1px, transparent 1px);
-  background-size: 40px 40px;
+  background-image:
+    linear-gradient(to right, rgba(6, 182, 212, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(6, 182, 212, 0.04) 1px, transparent 1px),
+    radial-gradient(circle at center, rgba(255, 250, 240, 0.05) 0.8px, transparent 0.9px);
+  background-size:
+    40px 40px,
+    40px 40px,
+    20px 20px;
 }
 
 .gauge-path {
@@ -139,8 +177,12 @@ textarea {
 .homepage-grid {
   background-image:
     linear-gradient(to right, rgba(6, 182, 212, 0.07) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(6, 182, 212, 0.07) 1px, transparent 1px);
-  background-size: 50px 50px;
+    linear-gradient(to bottom, rgba(6, 182, 212, 0.07) 1px, transparent 1px),
+    radial-gradient(circle at center, rgba(255, 250, 240, 0.06) 0.8px, transparent 0.9px);
+  background-size:
+    50px 50px,
+    50px 50px,
+    24px 24px;
   animation: homepage-grid-drift 45s linear infinite;
 }
 

@@ -1,19 +1,11 @@
 import Link from "next/link";
-import { AlertTriangle, CheckCircle2, ExternalLink, Shield, ShieldAlert } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ShieldAlert } from "lucide-react";
 import { NeuralSecHeader } from "@/components/neuralsec-header";
 import { ReportActionAssistantModal } from "@/components/report-action-assistant-modal";
 import { SetupNotice } from "@/components/site";
 import { getLatestAssessmentReportData } from "@/lib/assessment-report";
 import { makeRiskHref } from "@/lib/risk-links";
 import { createServerClientSafe } from "@/lib/supabase";
-
-const supportCard = {
-  title: "AI Action Assistant",
-  description: "Move from findings to action with the chatbot and full fix plan",
-  icon: Shield,
-  iconClassName: "text-cyan-300",
-  href: "/report",
-} as const;
 
 function getPriorityBadge(priority: "high" | "medium" | "low") {
   if (priority === "high") {
@@ -43,7 +35,6 @@ function getPriorityBadge(priority: "high" | "medium" | "low") {
 }
 
 export default async function KnowledgeBasePage() {
-  const SupportIcon = supportCard.icon;
   const supabase = await createServerClientSafe();
   if (!supabase) return <SetupNotice />;
 
@@ -61,7 +52,7 @@ export default async function KnowledgeBasePage() {
   };
 
   return (
-    <div className="homepage-grid relative flex min-h-screen flex-col bg-[#010409] text-slate-300">
+    <div className="homepage-grid paper-grid-bg relative flex min-h-screen flex-col bg-[#010409] text-slate-300">
       <NeuralSecHeader
         activeItem="resources"
         dashboardHref="/dashboard"
@@ -122,22 +113,8 @@ export default async function KnowledgeBasePage() {
           )}
         </section>
 
-        <footer className="grid grid-cols-1 gap-6 border-t border-white/5 pt-8">
-          <div className="rounded-[2rem] border border-white/5 bg-white/5 p-2 hover:shadow-[0_8px_30px_-18px_rgba(6,182,212,0.25)]">
-            <div className="pointer-events-none flex items-center gap-4 rounded-[1.5rem] p-4">
-              <SupportIcon className={`h-7 w-7 ${supportCard.iconClassName}`} />
-              <div className="flex-1">
-                <h4 className="text-sm font-bold text-white">{supportCard.title}</h4>
-                <p className="text-[11px] text-slate-500">{supportCard.description}</p>
-              </div>
-              <ExternalLink className="h-4 w-4 text-slate-600" />
-            </div>
-            <div className="px-4 pb-4">
-              <ReportActionAssistantModal assessmentResults={chatPayload} />
-            </div>
-          </div>
-        </footer>
       </main>
+      {hasAssessment ? <ReportActionAssistantModal assessmentResults={chatPayload} mode="floating" /> : null}
     </div>
   );
 }

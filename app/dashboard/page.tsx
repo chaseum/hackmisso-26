@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Download, ShieldPlus } from "lucide-react";
 import { DashboardSecurityData } from "@/components/dashboard-security-data";
 import { NeuralSecHeader } from "@/components/neuralsec-header";
+import { ReportActionAssistantModal } from "@/components/report-action-assistant-modal";
 import { SetupNotice } from "@/components/site";
 import { getLatestAssessmentReportData } from "@/lib/assessment-report";
 import { createServerClientSafe, hasSupabaseEnv } from "@/lib/supabase";
@@ -94,9 +95,15 @@ export default async function DashboardPage() {
     },
   ];
   const gaugeOffset = getGaugeOffset(scorePercent);
+  const chatPayload = {
+    scorePercent: report?.scorePercent ?? 0,
+    postureLabel: report?.postureLabel ?? "Needs attention",
+    recommendations: report?.recommendations ?? [],
+    vulnerabilities: report?.vulnerabilities ?? [],
+  };
 
   return (
-    <div className="grid-bg relative flex min-h-screen flex-col bg-[#010409] text-slate-300">
+    <div className="grid-bg paper-grid-bg relative flex min-h-screen flex-col bg-[#010409] text-slate-300">
       <NeuralSecHeader
         activeItem="dashboard"
         dashboardHref="/dashboard"
@@ -132,7 +139,7 @@ export default async function DashboardPage() {
             </a>
             <Link
               href={hasAssessment ? "/questionnaire" : "/prequestionnaire"}
-              className="flex items-center gap-2 rounded-xl bg-cyan-600 px-6 py-2.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(8,145,178,0.2)] transition-all hover:bg-cyan-500"
+              className="tactile-button flex items-center gap-2 rounded-xl bg-cyan-600 px-6 py-2.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(8,145,178,0.2)] hover:bg-cyan-500"
             >
               <ShieldPlus className="h-4 w-4" />
               {hasAssessment ? "Retake Assessment" : "Start Assessment"}
@@ -244,6 +251,7 @@ export default async function DashboardPage() {
           </div>
         </section>
       </main>
+      {hasAssessment ? <ReportActionAssistantModal assessmentResults={chatPayload} mode="floating" /> : null}
     </div>
   );
 }

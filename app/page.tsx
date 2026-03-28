@@ -257,7 +257,7 @@ export default function HomePage() {
                 <button
                   type="submit"
                   disabled={pending}
-                  className="flex items-center justify-center gap-3 rounded-2xl bg-cyan-600 py-4 text-center text-xs font-bold uppercase tracking-[0.2em] text-white shadow-[0_0_25px_rgba(8,145,178,0.2)] transition-all hover:bg-cyan-500 disabled:cursor-not-allowed disabled:opacity-70"
+                  className="tactile-button flex items-center justify-center gap-3 rounded-2xl bg-cyan-600 py-4 text-center text-xs font-bold uppercase tracking-[0.2em] text-white shadow-[0_0_25px_rgba(8,145,178,0.2)] hover:bg-cyan-500 disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   <Terminal className="h-4 w-4" />
                   <span className={pending ? "text-[10px] tracking-[0.16em]" : undefined}>

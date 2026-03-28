@@ -159,7 +159,7 @@ export function PrequestionnaireForm({ initialName = "" }: { initialName?: strin
 
           <button
             type="submit"
-            className="group flex w-full items-center justify-center gap-3 rounded-2xl bg-cyan-600 py-4 text-xs font-bold uppercase tracking-[0.2em] text-white shadow-[0_0_30px_rgba(8,145,178,0.2)] transition-all hover:bg-cyan-500"
+            className="tactile-button group flex w-full items-center justify-center gap-3 rounded-2xl bg-cyan-600 py-4 text-xs font-bold uppercase tracking-[0.2em] text-white shadow-[0_0_30px_rgba(8,145,178,0.2)] hover:bg-cyan-500"
           >
             <ArrowRightCircle className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             Initialize Assessment

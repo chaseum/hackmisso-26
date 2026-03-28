@@ -72,7 +72,7 @@ export function NeuralSecHeader({
         <Link
           href={ctaHref}
           onClick={onCtaClick}
-          className="px-8 py-3 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold uppercase tracking-widest rounded-full transition-all shadow-[0_0_20px_rgba(8,145,178,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)]"
+          className="tactile-button rounded-full bg-cyan-600 px-8 py-3 text-xs font-bold uppercase tracking-widest text-white shadow-[0_0_20px_rgba(8,145,178,0.3)] hover:bg-cyan-500 hover:shadow-[0_0_30px_rgba(6,182,212,0.5)]"
         >
           {ctaLabel}
         </Link>

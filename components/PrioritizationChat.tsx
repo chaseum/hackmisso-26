@@ -190,7 +190,7 @@ export function PrioritizationChat({ results, assessmentResults }: Prioritizatio
             type="button"
             onClick={() => handlePromptClick(prompt)}
             disabled={isLoading}
-            className="rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-semibold text-slate-100 transition hover:border-cyan-400/30 hover:bg-cyan-500/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+            className="tactile-button rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-semibold text-slate-100 hover:border-cyan-400/30 hover:bg-cyan-500/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
           >
             {prompt}
           </button>
