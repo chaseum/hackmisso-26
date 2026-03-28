@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { KeyRound, LockKeyhole } from "lucide-react";
+import { KeyRound, LockKeyhole, Settings } from "lucide-react";
 import { signOutAction } from "@/lib/actions";
 
-type ActiveItem = "dashboard" | "resources" | "mission" | "none";
+type ActiveItem = "dashboard" | "resources" | "mission" | "settings" | "none";
 
 export function NeuralSecHeader({
   activeItem = "dashboard",
@@ -14,6 +14,7 @@ export function NeuralSecHeader({
   ctaLabel = "Start Assessment",
   showLogout = false,
   showPrimaryNav = true,
+  settingsHref = "/settings",
   onCtaClick,
 }: {
   activeItem?: ActiveItem;
@@ -25,6 +26,7 @@ export function NeuralSecHeader({
   ctaLabel?: string;
   showLogout?: boolean;
   showPrimaryNav?: boolean;
+  settingsHref?: string;
   onCtaClick?: () => void;
 }) {
   const resolvedHomeHref = showLogout && homeHref === "/" ? dashboardHref : homeHref;
@@ -69,6 +71,19 @@ export function NeuralSecHeader({
       </nav>
 
       <div className="flex items-center gap-3 justify-self-end">
+        {showLogout ? (
+          <Link
+            href={settingsHref}
+            className={`inline-flex h-12 w-12 items-center justify-center rounded-full border text-white transition-all ${
+              activeItem === "settings"
+                ? "border-cyan-400/35 bg-cyan-500/12"
+                : "border-white/10 bg-white/5 hover:bg-white/10"
+            }`}
+            aria-label="Account settings"
+          >
+            <Settings className="h-4 w-4" />
+          </Link>
+        ) : null}
         <Link
           href={ctaHref}
           onClick={onCtaClick}

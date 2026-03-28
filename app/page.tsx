@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
+import type { MouseEvent as ReactMouseEvent } from "react";
 import {
   ArrowLeftCircle,
   Box,
@@ -20,6 +21,7 @@ export default function HomePage() {
   const [heroState, setHeroState] = useState<HeroState>("idle");
   const engageTimerRef = useRef<number | null>(null);
   const authTimerRef = useRef<number | null>(null);
+  const titleStageRef = useRef<HTMLDivElement | null>(null);
   const signInAction = authenticateWithPassword.bind(null, "sign-in");
   const [authState, formAction, pending] = useActionState(signInAction, initialAuthState);
 
@@ -54,6 +56,36 @@ export default function HomePage() {
       window.clearTimeout(authTimerRef.current);
     }
     setHeroState("idle");
+  }
+
+  function handleTitleMove(event: ReactMouseEvent<HTMLDivElement>) {
+    const container = titleStageRef.current;
+    if (!container) {
+      return;
+    }
+
+    const bounds = container.getBoundingClientRect();
+    const x = event.clientX - bounds.left;
+    const y = event.clientY - bounds.top;
+    const rotateY = ((x / bounds.width) - 0.5) * 16;
+    const rotateX = (0.5 - y / bounds.height) * 10;
+
+    container.style.setProperty("--pointer-x", `${x}px`);
+    container.style.setProperty("--pointer-y", `${y}px`);
+    container.style.setProperty("--rotate-x", `${rotateX.toFixed(2)}deg`);
+    container.style.setProperty("--rotate-y", `${rotateY.toFixed(2)}deg`);
+  }
+
+  function resetTitleMove() {
+    const container = titleStageRef.current;
+    if (!container) {
+      return;
+    }
+
+    container.style.setProperty("--pointer-x", "50%");
+    container.style.setProperty("--pointer-y", "50%");
+    container.style.setProperty("--rotate-x", "0deg");
+    container.style.setProperty("--rotate-y", "0deg");
   }
 
   const isZoomed = heroState === "locked" || heroState === "auth";
@@ -97,14 +129,24 @@ export default function HomePage() {
           className={`homepage-zoom flex flex-1 flex-col items-center justify-center px-4 ${isZoomed ? "homepage-zoomed" : ""}`}
         >
           <div className="mx-auto mb-16 max-w-3xl text-center">
-            <h1
-              className="homepage-glitch mb-6 text-5xl font-extrabold uppercase tracking-[0.15em] text-white [font-family:var(--font-display)] md:text-7xl"
-              data-text="ENHANCE YOUR SECURITY"
+            <div
+              ref={titleStageRef}
+              onMouseMove={handleTitleMove}
+              onMouseLeave={resetTitleMove}
+              className="homepage-title-stage mb-6 inline-block"
             >
-              Think outside the Lock.
-            </h1>
+              <h1
+                className="homepage-glitch homepage-title-heading text-5xl font-extrabold uppercase tracking-[0.15em] text-white [font-family:var(--font-display)] md:text-7xl"
+                data-text="THINK OUTSIDE THE LOCK."
+              >
+                Think outside the <span className="homepage-lock-word">Lock.</span>
+              </h1>
+            </div>
             <p className="text-sm uppercase tracking-[0.4em] text-cyan-400/60 [font-family:var(--font-mono)]">
               Enhance your organization&apos;s future digital security
+            </p>
+            <p className="mt-4 text-[11px] uppercase tracking-[0.28em] text-slate-500 [font-family:var(--font-mono)]">
+              Move your cursor across the title
             </p>
           </div>
 

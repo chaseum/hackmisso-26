@@ -1,5 +1,6 @@
 import "server-only";
 
+import { createServerClient } from "@/lib/supabase";
 import { getLatestAssessmentForCurrentUser, getQuestionsByIds } from "@/lib/assessment-dal";
 import type { AssessmentRecommendation, AssessmentRow, QuestionRow } from "@/types/database";
 
@@ -31,6 +32,13 @@ export type AssessmentReportData = {
   scorePercent: number;
   postureLabel: string;
   orgName: string;
+};
+
+export type VulnerabilityBreakdownItem = {
+  label: string;
+  count: number;
+  percentage: number;
+  color: { red: number; green: number; blue: number };
 };
 
 const simpleVulnerabilitySummaries: Record<string, { title: string; description: string }> = {
@@ -92,6 +100,46 @@ function getPostureLabel(scorePercent: number) {
   }
 
   return "Needs attention";
+}
+
+export function getSecurityScore(scorePercent: number) {
+  return Math.max(0, 100 - Math.round(scorePercent));
+}
+
+export function getSecurityLetterGrade(scorePercent: number) {
+  if (scorePercent <= 10) return "A";
+  if (scorePercent <= 20) return "B";
+  if (scorePercent <= 35) return "C";
+  if (scorePercent <= 50) return "D";
+  return "F";
+}
+
+export function buildVulnerabilityBreakdown(vulnerabilities: AssessmentVulnerability[]): VulnerabilityBreakdownItem[] {
+  if (vulnerabilities.length === 0) {
+    return [];
+  }
+
+  const colors = [
+    { red: 34 / 255, green: 211 / 255, blue: 238 / 255 },
+    { red: 16 / 255, green: 185 / 255, blue: 129 / 255 },
+    { red: 251 / 255, green: 191 / 255, blue: 36 / 255 },
+    { red: 217 / 255, green: 70 / 255, blue: 239 / 255 },
+    { red: 251 / 255, green: 113 / 255, blue: 133 / 255 },
+  ];
+
+  return Object.entries(
+    vulnerabilities.reduce<Record<string, number>>((accumulator, vulnerability) => {
+      accumulator[vulnerability.category] = (accumulator[vulnerability.category] ?? 0) + 1;
+      return accumulator;
+    }, {}),
+  )
+    .sort((left, right) => right[1] - left[1])
+    .map(([label, count], index) => ({
+      label,
+      count,
+      percentage: Number(((count / vulnerabilities.length) * 100).toFixed(1)),
+      color: colors[index % colors.length],
+    }));
 }
 
 function parseRecommendations(assessment: AssessmentRow | null) {
@@ -183,6 +231,11 @@ function buildVulnerabilities(
 }
 
 export async function getLatestAssessmentReportData() {
+  const supabase = await createServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   const assessment = await getLatestAssessmentForCurrentUser();
   const recommendations = parseRecommendations(assessment).sort((left, right) => {
     const leftRank = priorityRank[left.priority ?? "low"];
@@ -191,6 +244,14 @@ export async function getLatestAssessmentReportData() {
   });
   const questions = assessment ? await getQuestionsByIds(assessment.failed_question_ids) : [];
   const vulnerabilities = buildVulnerabilities(assessment, questions, recommendations);
+  const { data: profile } = user
+    ? await supabase.from("profiles").select("team_name").eq("id", user.id).maybeSingle()
+    : { data: null };
+  const fallbackOrgName =
+    assessment?.org_profile.name ||
+    profile?.team_name ||
+    (typeof user?.user_metadata.team_name === "string" ? user.user_metadata.team_name : "") ||
+    "your organization";
 
   return {
     assessment,
@@ -199,6 +260,6 @@ export async function getLatestAssessmentReportData() {
     vulnerabilities,
     scorePercent: Math.round(assessment?.score_percent ?? 0),
     postureLabel: getPostureLabel(assessment?.score_percent ?? 0),
-    orgName: assessment?.org_profile.name || "your organization",
+    orgName: fallbackOrgName,
   } satisfies AssessmentReportData;
 }

@@ -60,6 +60,12 @@ export default async function DashboardPage() {
   } = await supabase.auth.getUser();
 
   const report = user ? await getLatestAssessmentReportData() : null;
+  const userDisplayName =
+    typeof user?.user_metadata.full_name === "string" && user.user_metadata.full_name.trim().length > 0
+      ? user.user_metadata.full_name.trim().split(" ")[0]
+      : typeof user?.email === "string" && user.email.includes("@")
+        ? user.email.split("@")[0]
+        : "there";
   const assessment = report?.assessment ?? null;
   const vulnerabilities = report?.vulnerabilities ?? [];
   const scorePercent = report?.scorePercent ?? 0;
@@ -114,34 +120,34 @@ export default async function DashboardPage() {
         showLogout={Boolean(user)}
       />
 
-      <main className="relative mx-auto flex w-full max-w-7xl flex-1 flex-col gap-8 px-8 py-10">
-        <section className="fade-up flex flex-col items-start justify-between gap-6 border-b border-white/5 pb-8 md:flex-row md:items-end">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-cyan-400 [font-family:var(--font-mono)]">
+      <main className="relative mx-auto flex w-full max-w-7xl flex-1 flex-col gap-12 px-8 py-14">
+        <section className="fade-up flex flex-col items-start justify-between gap-8 border-b border-white/5 pb-12 md:flex-row md:items-end">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm uppercase tracking-[0.32em] text-cyan-400 [font-family:var(--font-mono)]">
               <span className="h-2 w-2 rounded-full bg-cyan-400" />
               Command Center
             </div>
-            <h1 className="text-5xl font-bold tracking-tight text-white [font-family:var(--font-display)]">
-              How bad is security today?
+            <h1 className="text-6xl font-bold tracking-tight text-white [font-family:var(--font-display)] md:text-7xl xl:text-[5.75rem]">
+              Hey {userDisplayName}, how&apos;s security today?
             </h1>
-            <p className="text-lg text-slate-300">
+            <p className="max-w-4xl text-xl leading-9 text-slate-300 md:text-2xl">
               Fast triage for <span className="font-medium text-white">{orgName}</span> based on the latest assessment snapshot.
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <a
               href="/api/report/pdf"
-              className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-white/10"
+              className="flex items-center gap-2 whitespace-nowrap rounded-xl border border-white/10 bg-white/5 px-6 py-3.5 text-base font-bold text-white transition-all hover:bg-white/10"
             >
-              <Download className="h-4 w-4" />
+              <Download className="h-5 w-5" />
               Export report
             </a>
             <Link
               href={hasAssessment ? "/questionnaire" : "/prequestionnaire"}
-              className="tactile-button flex items-center gap-2 rounded-xl bg-cyan-600 px-6 py-2.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(8,145,178,0.2)] hover:bg-cyan-500"
+              className="tactile-button flex items-center gap-2 whitespace-nowrap rounded-xl bg-cyan-600 px-7 py-3.5 text-base font-bold text-white shadow-[0_0_20px_rgba(8,145,178,0.2)] hover:bg-cyan-500"
             >
-              <ShieldPlus className="h-4 w-4" />
+              <ShieldPlus className="h-5 w-5" />
               {hasAssessment ? "Retake Assessment" : "Start Assessment"}
             </Link>
           </div>
@@ -150,11 +156,11 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-12 items-stretch gap-6">
           <div className="col-span-12 flex flex-col gap-6 lg:col-span-7">
             <section
-              className="card-glass fade-up relative flex h-full min-h-[34rem] flex-col items-center justify-center overflow-hidden rounded-[2.5rem] p-8"
+              className="card-glass fade-up relative flex h-full min-h-[42rem] flex-col items-center justify-center overflow-hidden rounded-[2.5rem] p-12"
               style={{ animationDelay: "0.1s" }}
             >
               <div className="hex-pattern pointer-events-none absolute top-0 left-0 h-full w-full opacity-10" />
-              <div className="relative flex h-56 w-56 items-center justify-center">
+              <div className="relative flex h-72 w-72 items-center justify-center">
                 <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
                   <circle
                     cx="50"
@@ -178,16 +184,16 @@ export default async function DashboardPage() {
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-7xl font-extrabold tracking-tighter text-white [font-family:var(--font-display)]">
+                  <span className="text-8xl font-extrabold tracking-tighter text-white [font-family:var(--font-display)]">
                     {scorePercent}
                   </span>
-                  <span className="text-xs font-bold uppercase tracking-widest text-slate-300 [font-family:var(--font-mono)]">
+                  <span className="mt-1 text-sm font-bold uppercase tracking-widest text-slate-300 [font-family:var(--font-mono)]">
                     Risk score
                   </span>
                 </div>
               </div>
-              <div className="mt-6 text-center">
-                <span className={`rounded-full border px-4 py-1.5 text-xs font-bold uppercase tracking-widest ${postureAccent}`}>
+              <div className="mt-8 text-center">
+                <span className={`rounded-full border px-5 py-2 text-sm font-bold uppercase tracking-widest ${postureAccent}`}>
                   {postureLabel}
                 </span>
               </div>
@@ -195,33 +201,44 @@ export default async function DashboardPage() {
           </div>
 
           <aside className="fade-up col-span-12 flex flex-col gap-6 lg:col-span-5" style={{ animationDelay: "0.2s" }}>
-            <DashboardSecurityData metrics={metricCards} scorePercent={scorePercent} />
+            <DashboardSecurityData metrics={metricCards} scorePercent={scorePercent} vulnerabilities={vulnerabilities} />
           </aside>
         </div>
 
-        <section className="fade-up rounded-[2.5rem] border border-white/5 bg-[#0d1117] p-8" style={{ animationDelay: "0.3s" }}>
-          <div className="mb-6 flex items-center justify-between gap-4">
+        <section className="fade-up rounded-[2.5rem] border border-white/5 bg-[#0d1117] p-10" style={{ animationDelay: "0.3s" }}>
+          <div className="mb-8 flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-base font-bold uppercase tracking-widest text-white [font-family:var(--font-mono)]">
+              <h2 className="text-lg font-bold uppercase tracking-widest text-white [font-family:var(--font-mono)]">
                 Alerts: High to Low
               </h2>
-              <p className="mt-2 text-base text-slate-300">
+              <p className="mt-3 text-lg leading-8 text-slate-300">
                 High-level triage only. Open the vulnerabilities page for full gap details or the action page for AI action guidance.
               </p>
             </div>
-            <Link href="/knowledge-base" className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-300 transition-colors hover:text-cyan-200">
-              Open Vulnerabilities
-            </Link>
+            <div className="flex flex-wrap items-center justify-center gap-3 md:justify-end">
+              <Link
+                href="/alerts"
+                className="inline-flex min-h-11 items-center justify-center rounded-full border border-emerald-300/20 bg-emerald-400/10 px-5 py-2.5 text-sm font-bold uppercase tracking-[0.18em] text-emerald-100 transition-colors hover:bg-emerald-400/15"
+              >
+                Open Instant Remediation
+              </Link>
+              <Link
+                href="/knowledge-base"
+                className="inline-flex min-h-11 items-center justify-center rounded-full border border-cyan-300/20 bg-cyan-400/10 px-5 py-2.5 text-sm font-bold uppercase tracking-[0.18em] text-cyan-100 transition-colors hover:bg-cyan-400/15"
+              >
+                Open Vulnerabilities
+              </Link>
+            </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             {vulnerabilities.length > 0 ? (
               vulnerabilities.map((item) => (
-                <article key={item.questionId} className="rounded-2xl border border-white/5 bg-white/[0.03] p-5">
-                  <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                <article key={item.questionId} className="rounded-2xl border border-white/5 bg-white/[0.03] p-7">
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <span
-                        className={`rounded px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${
+                        className={`rounded px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] ${
                           item.priority === "high"
                             ? "bg-rose-500/10 text-rose-300"
                             : item.priority === "medium"
@@ -235,16 +252,27 @@ export default async function DashboardPage() {
                         {item.frameworkReference}
                       </span>
                     </div>
-                    <Link href="/report" className="text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-300 transition-colors hover:text-cyan-200">
+                    <Link href="/report" className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-300 transition-colors hover:text-cyan-200">
                       Fix this
                     </Link>
                   </div>
-                  <h3 className="text-lg font-semibold text-white">{item.title}</h3>
-                  <p className="mt-2 text-base leading-7 text-slate-300">{item.description}</p>
+                  <h3 className="text-2xl font-semibold text-white">{item.title}</h3>
+                  <p className="mt-3 text-lg leading-8 text-slate-300">{item.description}</p>
+                  <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-300/10 bg-emerald-400/[0.04] px-4 py-3">
+                    <p className="text-sm text-slate-200">
+                      Want the quick UX? Use the alerts page to mark easy fixes as mitigated and watch the score increase live.
+                    </p>
+                    <Link
+                      href="/alerts"
+                      className="rounded-full bg-emerald-500 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-950 transition-colors hover:bg-emerald-400"
+                    >
+                      Mark as Mitigated
+                    </Link>
+                  </div>
                 </article>
               ))
             ) : (
-              <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-5 text-sm text-slate-400">
+              <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-7 text-base text-slate-400">
                 No active alerts yet. Run your first assessment to populate the command center.
               </div>
             )}

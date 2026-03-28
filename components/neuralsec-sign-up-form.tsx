@@ -6,6 +6,18 @@ import { ShieldCheck } from "lucide-react";
 import { authenticateWithPassword } from "@/lib/actions";
 
 const initialState = { error: "", success: "" };
+const ORG_FOCUS_OPTIONS = [
+  "Education",
+  "Healthcare",
+  "Community Services",
+  "Advocacy",
+  "Arts & Culture",
+  "Faith-Based",
+  "Environment",
+  "Housing",
+  "Technology",
+  "Other",
+] as const;
 
 function getPasswordStrength(password: string) {
   let score = 0;
@@ -60,6 +72,21 @@ export function NeuralSecSignUpForm() {
           </select>
         </label>
       </div>
+
+      <label className="space-y-2">
+        <span className="ml-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">What does your organization do?</span>
+        <select
+          name="org_focus"
+          defaultValue="Community Services"
+          className="input-focus w-full appearance-none rounded-2xl border border-white/5 bg-[#010409] px-5 py-3.5 text-sm font-medium text-white focus:ring-1 focus:ring-cyan-500/50 focus:outline-none"
+        >
+          {ORG_FOCUS_OPTIONS.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      </label>
 
       <label className="space-y-2">
         <span className="ml-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Full name</span>

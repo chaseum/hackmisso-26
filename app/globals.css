@@ -86,7 +86,10 @@ textarea {
 .glass-panel {
   background: var(--card);
   backdrop-filter: blur(18px);
-  box-shadow: var(--shadow);
+  box-shadow:
+    var(--shadow),
+    0 0 0 1px var(--neon-outline),
+    0 0 26px rgba(6, 182, 212, 0.08);
 }
 
 .tactile-button {
@@ -122,6 +125,8 @@ textarea {
   --cyan-glow: #06b6d4;
   --pink-glow: #f43f5e;
   --slate-border: rgba(255, 255, 255, 0.05);
+  --neon-outline: rgba(34, 211, 238, 0.22);
+  --neon-outline-soft: rgba(34, 211, 238, 0.08);
 }
 
 .grid-bg {
@@ -161,7 +166,11 @@ textarea {
 .card-glass {
   background: rgba(13, 17, 23, 0.7);
   backdrop-filter: blur(12px);
-  border: 1px solid var(--slate-border);
+  border: 1px solid color-mix(in srgb, var(--slate-border) 60%, var(--neon-outline) 40%);
+  box-shadow:
+    inset 0 0 0 1px var(--neon-outline-soft),
+    0 0 0 1px rgba(34, 211, 238, 0.08),
+    0 0 24px rgba(6, 182, 212, 0.08);
 }
 
 .status-pulse {
@@ -223,6 +232,64 @@ textarea {
   position: relative;
 }
 
+.homepage-title-stage {
+  --pointer-x: 50%;
+  --pointer-y: 50%;
+  --rotate-x: 0deg;
+  --rotate-y: 0deg;
+  position: relative;
+  transform-style: preserve-3d;
+  perspective: 1200px;
+}
+
+.homepage-title-stage::after {
+  content: "";
+  position: absolute;
+  inset: -14% -8%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at var(--pointer-x) var(--pointer-y), rgba(34, 211, 238, 0.28), transparent 22%),
+    radial-gradient(circle at calc(var(--pointer-x) + 6%) calc(var(--pointer-y) + 8%), rgba(244, 63, 94, 0.18), transparent 20%);
+  filter: blur(18px);
+  opacity: 0.9;
+  transition: opacity 0.22s ease;
+}
+
+.homepage-title-heading {
+  position: relative;
+  transform:
+    rotateX(var(--rotate-x))
+    rotateY(var(--rotate-y))
+    translateZ(0);
+  transition: transform 0.08s linear;
+  text-shadow:
+    0 0 18px rgba(6, 182, 212, 0.08),
+    0 0 32px rgba(6, 182, 212, 0.08);
+}
+
+.homepage-lock-word {
+  position: relative;
+  display: inline-block;
+  color: #67e8f9;
+  text-shadow:
+    0 0 12px rgba(103, 232, 249, 0.5),
+    0 0 30px rgba(6, 182, 212, 0.35);
+  transform: translateZ(32px);
+}
+
+.homepage-lock-word::after {
+  content: "";
+  position: absolute;
+  left: 6%;
+  right: 4%;
+  bottom: -0.12em;
+  height: 0.14em;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(244, 63, 94, 0.7), rgba(34, 211, 238, 0.9));
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.35);
+  transform-origin: center;
+}
+
 .homepage-glitch::before {
   content: attr(data-text);
   position: absolute;
@@ -238,12 +305,17 @@ textarea {
 .resource-card {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: rgba(13, 17, 23, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid color-mix(in srgb, rgba(255, 255, 255, 0.05) 60%, var(--neon-outline) 40%);
+  box-shadow:
+    inset 0 0 0 1px var(--neon-outline-soft),
+    0 0 22px rgba(6, 182, 212, 0.07);
 }
 
 .resource-card:hover {
   border-color: var(--cyan-glow);
-  box-shadow: 0 0 20px rgba(6, 182, 212, 0.15);
+  box-shadow:
+    inset 0 0 0 1px rgba(34, 211, 238, 0.12),
+    0 0 20px rgba(6, 182, 212, 0.15);
   transform: translateY(-4px);
 }
 
@@ -261,12 +333,17 @@ textarea {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: rgba(13, 17, 23, 0.8);
   backdrop-filter: blur(12px);
+  box-shadow:
+    inset 0 0 0 1px var(--neon-outline-soft),
+    0 0 22px rgba(6, 182, 212, 0.07);
 }
 
 .mission-card:hover {
   transform: translateY(-4px);
   border-color: rgba(6, 182, 212, 0.4);
-  box-shadow: 0 10px 40px -10px rgba(6, 182, 212, 0.15);
+  box-shadow:
+    inset 0 0 0 1px rgba(34, 211, 238, 0.12),
+    0 10px 40px -10px rgba(6, 182, 212, 0.15);
 }
 
 .progress-bar-fill {

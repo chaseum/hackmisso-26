@@ -63,20 +63,20 @@ export default async function KnowledgeBasePage() {
         showLogout={Boolean(user)}
       />
 
-      <main className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col gap-8 px-8 py-12">
-        <section className="border-b border-white/5 pb-8">
-          <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-cyan-300 [font-family:var(--font-mono)]">
+      <main className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col gap-12 px-8 py-14">
+        <section className="border-b border-white/5 pb-12">
+          <div className="text-xs font-bold uppercase tracking-[0.32em] text-cyan-300 [font-family:var(--font-mono)]">
             Active Vulnerabilities
           </div>
-          <h1 className="mt-3 text-4xl font-bold tracking-tight text-white [font-family:var(--font-display)]">
-            Let&apos;s find the gaps
+          <h1 className="mt-4 text-6xl font-bold tracking-tight text-white [font-family:var(--font-display)] md:text-7xl xl:text-[5.75rem]">
+            Let&apos;s find the gaps.
           </h1>
-          <p className="mt-3 max-w-3xl text-base leading-8 text-slate-300">
+          <p className="mt-4 max-w-4xl text-xl leading-9 text-slate-300 md:text-2xl">
             This screen is for investigation. Review the alert cards, inspect the failed controls, and then move to the AI action assistant when you are ready to act.
           </p>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {vulnerabilities.length > 0 ? (
             vulnerabilities.map((item) => {
               const badge = getPriorityBadge(item.priority);
@@ -86,20 +86,20 @@ export default async function KnowledgeBasePage() {
                 <Link
                   key={item.questionId}
                   href={makeRiskHref({ frameworkReference: item.frameworkReference, title: item.title })}
-                  className="group rounded-[1.75rem] border border-white/5 bg-[#0d1117] p-6 transition-all hover:border-cyan-500/20 hover:bg-white/[0.04]"
+                  className="resource-card group rounded-[1.75rem] p-8 hover:bg-white/[0.04]"
                 >
-                  <div className="mb-4 flex items-center justify-between gap-3">
-                    <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${badge.wrapper}`}>
-                      <PriorityIcon className={`h-3.5 w-3.5 ${badge.iconClassName}`} />
+                  <div className="mb-5 flex items-center justify-between gap-3">
+                    <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] ${badge.wrapper}`}>
+                      <PriorityIcon className={`h-4 w-4 ${badge.iconClassName}`} />
                       {badge.label}
                     </div>
-                    <span className="text-[10px] uppercase tracking-[0.18em] text-slate-500">{item.frameworkReference}</span>
+                    <span className="text-[11px] uppercase tracking-[0.18em] text-slate-500">{item.frameworkReference}</span>
                   </div>
 
-                  <h2 className="text-lg font-semibold text-white">{item.title}</h2>
-                  <p className="mt-3 text-sm leading-7 text-slate-400">{item.description}</p>
+                  <h2 className="text-2xl font-semibold text-white">{item.title}</h2>
+                  <p className="mt-4 text-base leading-8 text-slate-400">{item.description}</p>
 
-                  <div className="mt-5 flex items-center justify-between border-t border-white/5 pt-4 text-[10px] font-bold uppercase tracking-[0.18em]">
+                  <div className="mt-6 flex items-center justify-between border-t border-white/5 pt-5 text-[11px] font-bold uppercase tracking-[0.18em]">
                     <span className="text-slate-500">{item.category}</span>
                     <span className="text-cyan-300 transition-colors group-hover:text-cyan-200">Open in recommendations</span>
                   </div>
@@ -107,7 +107,7 @@ export default async function KnowledgeBasePage() {
               );
             })
           ) : (
-            <div className="rounded-[1.75rem] border border-white/5 bg-[#0d1117] p-6 text-sm text-slate-400">
+            <div className="resource-card rounded-[1.75rem] p-8 text-base text-slate-400">
               No alerts are available yet. Start an assessment to generate the data page.
             </div>
           )}

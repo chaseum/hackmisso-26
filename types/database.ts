@@ -4,6 +4,7 @@ export type ProfileRow = {
   full_name: string | null;
   avatar_url: string | null;
   team_name: string | null;
+  org_focus: string | null;
   created_at: string;
 };
 

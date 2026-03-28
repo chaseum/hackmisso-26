@@ -18,6 +18,13 @@ type OpenAIRecommendationsResponse = {
   recommendations?: AssessmentRecommendation[];
 };
 
+type DraftPolicyKind = "password-policy" | "data-breach-response-plan";
+
+const POLICY_LABELS: Record<DraftPolicyKind, string> = {
+  "password-policy": "Password Policy",
+  "data-breach-response-plan": "Data Breach Response Plan",
+};
+
 function parseOpenAIJson(content: string) {
   try {
     return JSON.parse(content) as OpenAIRecommendationsResponse;
@@ -58,6 +65,83 @@ export function buildFallbackRecommendations(
       summary: `${whyItMatters} ${actionableFix}`,
     };
   });
+}
+
+function buildFallbackPolicyDraft(policyKind: DraftPolicyKind, orgProfile: OrgProfile) {
+  const orgName = orgProfile.name || "the organization";
+  const orgType = orgProfile.type.toLowerCase();
+  const orgSize = orgProfile.size;
+
+  if (policyKind === "password-policy") {
+    return `
+${orgName} Password Policy
+
+Purpose
+This policy explains how ${orgName}, a ${orgType}, protects email, cloud tools, shared files, finance systems, and any other accounts used by staff, volunteers, officers, or student leaders.
+
+Scope
+This policy applies to all accounts used for ${orgName} operations, including administrator accounts, email, fundraising tools, file storage, banking portals, and devices that store organizational data.
+
+Password Requirements
+1. Every account must use a unique password that is not reused on any other service.
+2. Passwords should be at least 14 characters long or use a passphrase with at least four random words.
+3. Default passwords must be changed immediately before a system goes into use.
+4. Shared accounts should be avoided. If one is unavoidable, access must be limited and the password must be rotated whenever a person with access leaves the team.
+
+Password Management
+1. ${orgName} should store passwords in an approved password manager.
+2. Passwords must not be shared in email, chat, spreadsheets, or paper notes left in visible locations.
+3. Administrator and finance-related credentials must be reviewed at least quarterly.
+
+Multi-Factor Authentication
+1. MFA is required on administrator, email, finance, and file-sharing accounts.
+2. MFA must be enabled before new leaders or staff receive privileged access.
+
+Account Changes
+1. When a staff member, volunteer, or officer leaves, their accounts must be disabled or transferred within 24 hours.
+2. Passwords for sensitive shared systems must be changed immediately after role changes or suspected exposure.
+
+Incident Handling
+If a password is suspected to be exposed, the account owner must change it immediately, enable or confirm MFA, and notify the designated security lead.
+
+Policy Owner
+The executive director, president, or designated technology lead is responsible for maintaining this policy for a ${orgSize} team and reviewing it at least once per year.
+    `.trim();
+  }
+
+  return `
+${orgName} Data Breach Response Plan
+
+Purpose
+This plan provides a simple response process for ${orgName}, a ${orgType}, if personal data, donor information, student records, credentials, or internal files are exposed, stolen, or accessed without permission.
+
+Scope
+This plan applies to any suspected or confirmed security incident involving systems, accounts, devices, email, cloud storage, or third-party platforms used by ${orgName}.
+
+Response Team
+1. Incident Lead: the executive director, president, or designated technology lead.
+2. Communications Lead: the person responsible for board, faculty advisor, donor, or community updates.
+3. Technical Support: any internal admin, volunteer, or outside IT partner helping contain the issue.
+
+Response Steps
+1. Identify: Confirm what happened, when it started, and which systems or accounts may be involved.
+2. Contain: Reset passwords, disable compromised accounts, disconnect affected devices, and limit access to impacted systems.
+3. Preserve Evidence: Save logs, screenshots, emails, and timestamps before making major changes.
+4. Assess Impact: Determine what data may have been exposed and which people could be affected.
+5. Notify Leadership: Brief the board chair, faculty advisor, or leadership team as soon as practical.
+6. Notify Affected Parties: If sensitive data may have been exposed, prepare a plain-language notice explaining what happened, what data was involved, and what actions recipients should take.
+7. Recover: Restore normal operations, validate account security, and confirm backups or services are functioning properly.
+8. Review: Within seven days, document lessons learned and assign follow-up fixes.
+
+Documentation Requirements
+The incident lead must keep a simple written record of the date, systems affected, actions taken, notifications sent, and remaining remediation items.
+
+External Support
+${orgName} should contact its technology vendor, cyber insurance contact, legal counsel, or faculty/parent institution when the incident involves regulated data, financial systems, or law enforcement concerns.
+
+Plan Maintenance
+This plan should be reviewed annually and after any major incident so it remains practical for a ${orgSize} organization.
+  `.trim();
 }
 
 export async function generateCyberRecommendations(
@@ -176,4 +260,76 @@ Hard rules:
     ...recommendation,
     summary: recommendation.summary ?? `${recommendation.why_it_matters} ${recommendation.actionable_fix}`.trim(),
   }));
+}
+
+export async function generatePolicyDraft({
+  policyKind,
+  orgProfile,
+}: {
+  policyKind: DraftPolicyKind;
+  orgProfile: OrgProfile;
+}) {
+  const apiKey = process.env.OPENAI_API_KEY;
+
+  if (!apiKey) {
+    return buildFallbackPolicyDraft(policyKind, orgProfile);
+  }
+
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      temperature: 0.4,
+      response_format: { type: "text" },
+      messages: [
+        {
+          role: "system",
+          content: `
+You write practical cybersecurity policy drafts for small organizations.
+
+The user needs a copy-pasteable first draft that is customized, plain English, and appropriate for non-technical leaders.
+
+Requirements:
+1. Produce a complete draft policy document only.
+2. Do not include markdown fences.
+3. Use short headings and concise sections.
+4. Keep it realistic for smaller teams with limited budget.
+5. Mention the organization name naturally throughout the draft.
+6. Include a review/owner section.
+7. Avoid legal claims or state-specific compliance language.
+          `.trim(),
+        },
+        {
+          role: "user",
+          content: JSON.stringify(
+            {
+              requested_policy: POLICY_LABELS[policyKind],
+              organization_profile: orgProfile,
+            },
+            null,
+            2,
+          ),
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    return buildFallbackPolicyDraft(policyKind, orgProfile);
+  }
+
+  const data = (await response.json()) as {
+    choices?: Array<{
+      message?: {
+        content?: string | null;
+      };
+    }>;
+  };
+  const content = data.choices?.[0]?.message?.content?.trim();
+
+  return content || buildFallbackPolicyDraft(policyKind, orgProfile);
 }

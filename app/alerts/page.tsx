@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { BellRing } from "lucide-react";
+import { AlertsMitigationBoard } from "@/components/alerts-mitigation-board";
 import { NeuralSecHeader } from "@/components/neuralsec-header";
 import { SetupNotice } from "@/components/site";
+import { getSecurityScore } from "@/lib/assessment-report";
 import { getLatestAssessmentReportData } from "@/lib/assessment-report";
-import { makeRiskHref } from "@/lib/risk-links";
 import { createServerClientSafe, hasSupabaseEnv } from "@/lib/supabase";
 
 export default async function AlertsPage() {
@@ -20,6 +21,7 @@ export default async function AlertsPage() {
     data: { user },
   } = await supabase.auth.getUser();
   const report = user ? await getLatestAssessmentReportData() : null;
+  const baseSecurityScore = getSecurityScore(report?.scorePercent ?? 0);
 
   return (
     <div className="grid-bg relative flex min-h-screen flex-col bg-[#010409] text-slate-300">
@@ -47,34 +49,7 @@ export default async function AlertsPage() {
           </p>
         </section>
 
-        <section className="space-y-4">
-          {report?.alerts.length ? (
-            report.alerts.map((alert) => (
-              <Link
-                key={`${alert.level}-${alert.title}`}
-                href={makeRiskHref({ frameworkReference: alert.frameworkReference, title: alert.title })}
-                className="card-glass block rounded-[1.5rem] p-5 transition-colors hover:bg-white/[0.06]"
-              >
-                <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <span className={`rounded px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] ${alert.levelClassName}`}>
-                      {alert.level}
-                    </span>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
-                      {alert.frameworkReference ?? "Assessment"}
-                    </span>
-                  </div>
-                </div>
-                <h2 className="text-base font-semibold text-white">{alert.title}</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-300">{alert.description}</p>
-              </Link>
-            ))
-          ) : (
-            <div className="card-glass rounded-[1.5rem] p-5 text-sm text-slate-400">
-              No alerts are available yet. Run a scan first.
-            </div>
-          )}
-        </section>
+        <AlertsMitigationBoard alerts={report?.alerts ?? []} baseSecurityScore={baseSecurityScore} />
 
         <div>
           <Link href="/report" className="text-sm font-bold text-cyan-400 transition-colors hover:text-cyan-300">

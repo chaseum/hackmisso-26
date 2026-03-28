@@ -1,4 +1,5 @@
 import { createBrowserClient, createServerClient as createSupabaseServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -13,9 +14,28 @@ export function getSupabaseEnv() {
   return { url, anonKey };
 }
 
+export function hasSupabaseServiceRoleEnv() {
+  return Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY);
+}
+
 export function createBrowserSupabaseClient() {
   const { url, anonKey } = getSupabaseEnv();
   return createBrowserClient(url, anonKey);
+}
+
+export function createAdminClient() {
+  const { url } = getSupabaseEnv();
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) {
+    throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY.");
+  }
+
+  return createClient(url, serviceRoleKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
 }
 
 export async function createServerClient() {
@@ -56,6 +76,7 @@ export async function updateSession(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   const isProtectedRoute =
     request.nextUrl.pathname.startsWith("/dashboard") ||
+    request.nextUrl.pathname.startsWith("/settings") ||
     request.nextUrl.pathname.startsWith("/test-harness") ||
     request.nextUrl.pathname.startsWith("/prequestionnaire") ||
     request.nextUrl.pathname.startsWith("/questionnaire") ||
