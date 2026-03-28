@@ -66,7 +66,7 @@ insert into public.questions (
     2.0,
     'CIS Controls',
     'CIS Control 1',
-    'Actively manage (inventory, track, and correct) all enterprise assets connected to the infrastructure physically, virtually, or remotely. Without knowing exactly what devices are touching your network, you cannot secure them, leaving blind spots where attackers can hide unmonitored.'
+    'FRAMEWORK MANDATE: Actively manage (inventory, track, and correct) all enterprise assets connected to the infrastructure physically, virtually, remotely, and within cloud environments. BUSINESS RATIONALE: You cannot defend a network if you do not know what is on it. Shadow IT, employee personal devices (BYOD), and forgotten legacy servers create massive, unmonitored blind spots. IMPLEMENTATION: Organizations should deploy active network discovery tools, passive asset scanners, or Unified Endpoint Management (UEM) solutions to automatically log every device attempting to connect to the network, dynamically updating the inventory rather than relying on static spreadsheets. EXPLOIT SCENARIO: A marketing employee brings a personal, malware-infected laptop to the office and plugs it into a seemingly dead Ethernet wall jack. Because the organization lacks automated network access control and asset tracking, the infected laptop bypasses perimeter firewalls entirely. It silently maps the internal network, locates a forgotten, unpatched Windows 7 print server that IT forgot existed, and uses it as a staging ground to launch a persistent ransomware attack against the primary corporate database.'
   ),
   (
     'q2',
@@ -77,7 +77,7 @@ insert into public.questions (
     1.0,
     'ISO 27001',
     'ISO/IEC 27001 A.5.18',
-    'Formal procedures must be implemented to manage the allocation, review, and revocation of access rights. When personnel leave, their access to all information processing facilities and services must be terminated immediately. Orphaned accounts are a primary vector for insider threats and unauthorized external access.'
+    'FRAMEWORK MANDATE: Formal procedures must be implemented to manage the allocation, review, and immediate revocation of access rights across all information processing facilities and SaaS applications. BUSINESS RATIONALE: Lingering access by former personnel is a critical vulnerability. Orphaned accounts are not actively monitored, making them prime targets for external hackers and malicious insider threats. IMPLEMENTATION: Organizations must establish a strict, automated offboarding workflow. When HR marks an employee as terminated, an integrated Identity and Access Management (IAM) system should instantly revoke SSO tokens, VPN certificates, cloud storage access, and physical keycard entry simultaneously. EXPLOIT SCENARIO: An unhappy sales director leaves for a direct competitor. Because IT relies on a manual checklist for offboarding, they disable the director''s primary email but forget to revoke their standalone access to the company''s cloud-based Customer Relationship Management (CRM) tool. Two weeks later, the former director logs into the CRM from their home network, exports the entire proprietary client list, pricing models, and pending contracts, and hands the data to their new employer, costing the original company millions in lost revenue.'
   ),
   (
     'q3',
@@ -88,7 +88,7 @@ insert into public.questions (
     1.0,
     'CIS Controls',
     'CIS Control 6',
-    'Use secure authentication credentials, such as Multi-Factor Authentication (MFA), for all administrative access, remote access, and enterprise-facing applications. MFA adds a critical layer of security by requiring two or more independent credentials, neutralizing the threat of compromised, reused, or easily guessed passwords.'
+    'FRAMEWORK MANDATE: Implement and require secure authentication credentials, specifically Multi-Factor Authentication (MFA), for all administrative access, remote access, and enterprise-facing applications. BUSINESS RATIONALE: Passwords alone are fundamentally broken. They are easily guessed, reused across personal and professional sites, and stolen in third-party data breaches. MFA acts as a critical fail-safe, ensuring that even if a password is compromised, the attacker cannot authenticate without the second physical factor. IMPLEMENTATION: Organizations must enforce MFA across all email suites (Google Workspace/M365), VPNs, and financial portals. Phishing-resistant methods like FIDO2 hardware keys or authenticator apps should be prioritized over easily intercepted SMS text messages. EXPLOIT SCENARIO: A hacker purchases a batch of leaked passwords from a dark web forum and discovers a match for the company CFO. Without MFA enabled on the corporate email system, the hacker logs directly into the CFO''s inbox undetected. They spend a week silently reading email threads to learn communication styles, then intercept an ongoing vendor conversation, altering the routing numbers on an attached PDF invoice. The finance team wires $150,000 to the hacker''s offshore account before anyone realizes the breach occurred.'
   ),
   (
     'q4',
@@ -99,7 +99,7 @@ insert into public.questions (
     1.0,
     'CIS Controls',
     'CIS Control 7',
-    'Develop a plan to continuously assess and track vulnerabilities on all enterprise assets. Ensure software, operating systems, and applications are updated with the latest security patches. Unpatched software contains known, public exploits that attackers actively scan for and use to compromise systems automatically.'
+    'FRAMEWORK MANDATE: Establish a continuous vulnerability management process to quickly assess, track, and remediate vulnerabilities on all enterprise assets, ensuring software is patched against known exploits. BUSINESS RATIONALE: Software vendors constantly release patches to fix newly discovered security flaws (CVEs). Attackers actively scan the internet for organizations running outdated, vulnerable software, exploiting these flaws to gain instant, unauthorized administrative control. IMPLEMENTATION: Small businesses should leverage centralized patch management software or Native OS MDM policies to enforce automatic, scheduled updates for operating systems, web browsers, and critical third-party applications like PDF readers and conferencing tools. EXPLOIT SCENARIO: A critical vulnerability is publicly disclosed for a popular VPN software used by the organization. The IT team plans to patch it "next weekend." Within 12 hours of the disclosure, an automated botnet scans the company''s public IP address, detects the unpatched VPN gateway, and executes a zero-day exploit. The attacker bypasses all authentication, drops a web shell on the server, and gains a permanent backdoor into the internal network long before the IT team begins their scheduled weekend maintenance.'
   ),
   (
     'q5',
@@ -110,7 +110,7 @@ insert into public.questions (
     1.0,
     'NIST CSF',
     'PR.AA-01',
-    'Access permissions, entitlements, and authorizations are managed, incorporating the principles of least privilege and separation of duties. Users should only have access to the specific data and systems necessary for their role. Over-permissioning allows a single compromised user account to grant an attacker access to the entire organization''s sensitive data.'
+    'FRAMEWORK MANDATE: Access permissions, entitlements, and authorizations must be managed strictly incorporating the principles of least privilege and separation of duties. BUSINESS RATIONALE: Defaulting to "open access" for internal documents creates an enormous blast radius during a security incident. If every employee has access to everything, a single compromised low-level account grants an attacker the keys to the entire kingdom. IMPLEMENTATION: Enforce Role-Based Access Control (RBAC). Group employees by department and grant access only to the specific shared drives, databases, and applications necessary for their daily workflow. Conduct quarterly audits to prune access creep. EXPLOIT SCENARIO: A junior graphic designer falls victim to a credential harvesting scam. Because the company file server is configured with global read/write permissions for all authenticated users to "make collaboration easier," the attacker uses the designer''s account to navigate directly into the HR folder. They silently exfiltrate unencrypted W-2 tax forms containing the social security numbers and home addresses of the entire executive board, leading to severe identity theft and regulatory fines.'
   ),
   (
     'q6',
@@ -121,7 +121,7 @@ insert into public.questions (
     2.0,
     'CIS Controls',
     'CIS Control 5',
-    'Establish and manage an inventory of accounts, including the requirement for complex, unique passwords across all systems. Utilizing enterprise password managers ensures employees do not resort to weak or reused passwords across personal and business accounts, significantly lowering the risk of credential stuffing attacks.'
+    'FRAMEWORK MANDATE: Establish an inventory of accounts and enforce the use of centralized credential management alongside complex, unique passwords across all enterprise systems. BUSINESS RATIONALE: Password fatigue is a major security risk. When employees are forced to remember dozens of logins, they inevitably resort to using simple passwords and reusing them across personal shopping sites, social media, and corporate portals. IMPLEMENTATION: Deploy an enterprise-grade password manager. This allows employees to generate and securely store cryptographically strong, 16+ character passwords for every service. It also enables IT to securely share administrative credentials among teams without exposing the raw password text to the employees. EXPLOIT SCENARIO: An employee uses the password "Spring2025!" for both their corporate email and a minor, unsecured fitness tracking app. The fitness app is hacked, and its user database is dumped online. Attackers use automated "credential stuffing" bots to test those leaked emails and passwords across thousands of corporate Microsoft 365 login pages. The bot successfully logs into the employee''s corporate account, immediately begins downloading confidential company data, and uses the account to launch internal phishing attacks against other staff members.'
   ),
   (
     'q7',
@@ -132,7 +132,7 @@ insert into public.questions (
     2.0,
     'NIST CSF',
     'PR.AT-01',
-    'Personnel are trained and tested on their cybersecurity responsibilities and are aware of the organization''s security policies. Human error is a leading cause of security breaches. Regular training on recognizing phishing emails, social engineering, and safe web browsing transforms employees from the weakest link into a strong line of defense.'
+    'FRAMEWORK MANDATE: Personnel and partners are trained, tested, and maintain awareness of their cybersecurity responsibilities, recognizing threats such as social engineering and phishing. BUSINESS RATIONALE: Firewalls and antivirus software cannot stop a user from willingly handing over their password. Human error remains the primary entry point for the vast majority of cyberattacks. Continuous training transforms the workforce from a vulnerable attack surface into an active human firewall. IMPLEMENTATION: Organizations must institute a formal security awareness program. This includes brief, monthly interactive training modules covering current threat trends, combined with unannounced, simulated phishing campaigns to identify high-risk employees who require additional, specialized coaching. EXPLOIT SCENARIO: During tax season, an untrained payroll clerk receives an urgent email appearing to be from the CEO, requesting a quick review of an attached "Q1 Bonus Distribution" Excel file. The email is actually a highly targeted spear-phishing attack. The clerk clicks the attachment and enables macros, unknowingly executing a malicious script that disables the local antivirus, establishes a command-and-control connection to a foreign server, and gives the attacker full remote control over the clerk''s workstation.'
   ),
   (
     'q8',
@@ -143,7 +143,7 @@ insert into public.questions (
     1.0,
     'CIS Controls',
     'CIS Control 10',
-    'Prevent or control the installation, spread, and execution of malicious applications, code, or scripts on enterprise assets. Centrally managed anti-malware software must be active, continuously updated, and configured to alert administrators of infections to stop ransomware or spyware before it can execute or exfiltrate data.'
+    'FRAMEWORK MANDATE: Deploy, maintain, and continuously update anti-malware protections across all enterprise assets to prevent or control the execution of malicious applications, code, or scripts. BUSINESS RATIONALE: Commodity malware, keyloggers, and automated ransomware scripts are constantly bombarding networks. Without active endpoint protection, malicious processes can execute entirely undetected in the background, harvesting credentials and encrypting local data. IMPLEMENTATION: Migrate from legacy signature-based antivirus to modern Endpoint Detection and Response (EDR) or Next-Generation Antivirus (NGAV) solutions. These tools monitor behavioral anomalies in real-time, allowing them to instantly kill malicious processes, isolate infected machines from the network, and alert IT staff before the infection spreads. EXPLOIT SCENARIO: A remote employee connects to an unsecured public Wi-Fi network at a coffee shop. An attacker intercepts their traffic and seamlessly injects a malicious "fileless" malware payload directly into the computer''s memory, bypassing traditional disk-based antivirus scans. Because the company does not have behavioral EDR software running, the malware silently hooks into the web browser, records every keystroke, captures the employee''s banking portal credentials, and intercepts live session cookies to bypass MFA.'
   ),
   (
     'q9',
@@ -154,7 +154,7 @@ insert into public.questions (
     3.0,
     'NIST CSF',
     'RS.RP-01',
-    'An incident response plan is executed during or after an event. Organizations must have a documented and tested playbook detailing who to contact, how to contain a breach, and how to preserve evidence. Without a clear plan, response times drag out, causing increased data loss, operational downtime, and panic.'
+    'FRAMEWORK MANDATE: Organizations must execute a documented, tested, and regularly updated incident response plan during or after a cybersecurity event to ensure swift containment and eradication. BUSINESS RATIONALE: The first 24 hours of a cyberattack are chaotic. Without a predefined playbook, IT teams waste critical hours panicking, arguing about jurisdiction, and attempting untested fixes. This delay exponentially increases the damage, data loss, and financial cost of the breach. IMPLEMENTATION: Develop a formal Incident Response (IR) plan detailing exact roles, out-of-band communication channels, containment protocols (e.g., pulling the server offline vs. monitoring), legal notification obligations, and cyber insurance contact numbers. Run bi-annual tabletop exercises to build muscle memory among executives and IT. EXPLOIT SCENARIO: A company discovers an active data breach on their main server at 4:00 PM on a Friday. Lacking a response plan, the junior IT admin panics and immediately deletes the compromised server instances to "stop the bleeding." By doing so, they inadvertently destroy all forensic evidence needed by law enforcement to track the attackers, violate their cyber insurance policy terms causing a claim denial, and fail to realize the attackers had already installed persistence mechanisms on three other servers, leading to a secondary, much worse breach on Monday morning.'
   ),
   (
     'q10',
@@ -165,7 +165,7 @@ insert into public.questions (
     3.0,
     'NIST CSF',
     'RC.RP-01',
-    'Recovery processes and procedures are maintained and tested to ensure timely restoration of systems and assets affected by cybersecurity events. Backups must be automated, encrypted, and physically or logically isolated (offline/immutable) from the primary network to ensure they cannot be corrupted or encrypted by ransomware.'
+    'FRAMEWORK MANDATE: Recovery processes, procedures, and backup data must be maintained, protected, and regularly tested to ensure the timely restoration of systems affected by cybersecurity events. BUSINESS RATIONALE: Ransomware is an existential threat to small businesses. If all live data and network-attached backups are encrypted, the organization is completely paralyzed and faced with an extortion demand they cannot afford. Reliable, offline backups are the only guaranteed way to survive. IMPLEMENTATION: Execute the 3-2-1 backup strategy: maintain 3 copies of your data, on 2 different media types, with 1 copy stored securely offsite or in a cryptographically immutable cloud vault that cannot be altered or deleted, even by a user with global administrative credentials. EXPLOIT SCENARIO: A sophisticated ransomware gang breaches the corporate network. Before launching the encryption payload, their automated scripts spend two days hunting for network-attached storage (NAS) and shadow volume copies, systematically deleting all accessible corporate backups. When the ransomware finally detonates, it locks the primary servers. Because the company only backed up data to a connected network drive in the server room, everything is lost. With no offline, air-gapped backups to restore from, the company is forced to shut down operations permanently.'
   )
 on conflict (id) do update
 set
@@ -177,6 +177,6 @@ set
   framework_name = excluded.framework_name,
   framework_reference = excluded.framework_reference,
   framework_excerpt = excluded.framework_excerpt;
-
+  
 comment on table public.questions is 'Cybersecurity assessment questions with scoring metadata and framework excerpts for retrieval.';
 comment on table public.assessments is 'Saved assessment results and AI-generated recommendations for authenticated users.';
